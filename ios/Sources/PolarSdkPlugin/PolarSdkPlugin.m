@@ -1,13 +1,52 @@
 #import <Foundation/Foundation.h>
 #import <Capacitor/Capacitor.h>
 
-// Define the plugin using the CAP_PLUGIN Macro, and
-// each method the plugin supports using the CAP_PLUGIN_METHOD macro.
 CAP_PLUGIN(PolarSdk, "PolarSdk",
-           CAP_PLUGIN_METHOD(connectPolar, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(disconnectPolar, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(streamHR, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(streamEcg, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(stopEcg, CAPPluginReturnPromise);
-           CAP_PLUGIN_METHOD(stopHR, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(connectToDevice, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(disconnectFromDevice, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(searchForDevice, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(getAvailableOnlineStreamDataTypes, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(requestStreamSettings, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(startHrStreaming, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(startEcgStreaming, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(startAccStreaming, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(startGyroStreaming, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(startMagnetometerStreaming, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(startPpgStreaming, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(startPpiStreaming, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(startTemperatureStreaming, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(startPressureStreaming, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(stopStreaming, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(startRecording, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(stopRecording, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(requestRecordingStatus, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(listExercises, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(fetchExercise, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(removeExercise, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(setLedConfig, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(doFactoryReset, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(enableSdkMode, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(disableSdkMode, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(isSdkModeEnabled, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(getAvailableOfflineRecordingDataTypes, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(requestOfflineRecordingSettings, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(startOfflineRecording, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(stopOfflineRecording, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(getOfflineRecordingStatus, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(listOfflineRecordings, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(getOfflineRecord, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(removeOfflineRecord, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(getDiskSpace, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(getLocalTime, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(setLocalTime, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(doFirstTimeUse, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(isFtuDone, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(deleteStoredDeviceData, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(deleteDeviceDateFolders, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(getSteps, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(getDistance, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(getActiveTime, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(getActivitySampleData, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(sendInitializationAndStartSyncNotifications, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(sendTerminateAndStopSyncNotifications, CAPPluginReturnPromise);
 )

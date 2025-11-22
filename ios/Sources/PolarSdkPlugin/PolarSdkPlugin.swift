@@ -1,66 +1,20 @@
-/// Copyright © 2021 Polar Electro Oy. All rights reserved.
-
 import Foundation
 import PolarBleSdk
 import RxSwift
 import CoreBluetooth
 import Capacitor
 
-/// PolarSdk demonstrates how to user PolarBleSDK API
 @objc(PolarSdk)
 class PolarSdk : CAPPlugin, ObservableObject {
-    // NOTICE this example utilises all available features
     private var api = PolarBleApiDefaultImpl.polarImplementation(DispatchQueue.main,
-                                                                 features: [PolarBleSdkFeature.feature_hr,
-                                                                            PolarBleSdkFeature.feature_polar_sdk_mode,
-                                                                            PolarBleSdkFeature.feature_battery_info,
-                                                                            PolarBleSdkFeature.feature_device_info,
-                                                                            PolarBleSdkFeature.feature_polar_online_streaming,
-                                                                            PolarBleSdkFeature.feature_polar_offline_recording,
-                                                                            PolarBleSdkFeature.feature_polar_device_time_setup,
-                                                                            PolarBleSdkFeature.feature_polar_h10_exercise_recording]
-    )
-    
-    // TODO replace the device id with your device ID or use the auto connect to when connecting to device
-    private static let deviceId = ""
+                                                                 features: Set(PolarBleSdkFeature.allCases))
     
     @Published var isBluetoothOn: Bool = true
-    @Published var isBroadcastListenOn: Bool = false
+    @Published var deviceConnectionState: [String: DeviceConnectionState] = [:]
     
-    @Published var deviceConnectionState: DeviceConnectionState = DeviceConnectionState.disconnected(deviceId)
-    
-    @Published var deviceSearch: DeviceSearch = DeviceSearch()
-    
-    @Published var onlineStreamingFeature: OnlineStreamingFeature = OnlineStreamingFeature()
-    @Published var onlineStreamSettings: RecordingSettings? = nil
-    
-    @Published var offlineRecordingFeature = OfflineRecordingFeature()
-    @Published var offlineRecordingSettings: RecordingSettings? = nil
-    @Published var offlineRecordingEntries: OfflineRecordingEntries = OfflineRecordingEntries()
-    @Published var offlineRecordingData: OfflineRecordingData = OfflineRecordingData()
-    
-    @Published var deviceTimeSetupFeature: DeviceTimeSetupFeature = DeviceTimeSetupFeature()
-    
-    @Published var sdkModeFeature: SdkModeFeature = SdkModeFeature()
-    
-    @Published var h10RecordingFeature: H10RecordingFeature = H10RecordingFeature()
-    
-    @Published var deviceInfoFeature: DeviceInfoFeature = DeviceInfoFeature()
-    
-    @Published var batteryStatusFeature: BatteryStatusFeature = BatteryStatusFeature()
-    
-    @Published var ledAnimationFeature: LedAnimationFeature = LedAnimationFeature()
-    
-    @Published var generalMessage: Message? = nil
-    
-    private var broadcastDisposable: Disposable?
-    private var autoConnectDisposable: Disposable?
-    private var onlineStreamingDisposables: [PolarDeviceDataType: Disposable?] = [:]
-    
+    private var onlineStreamingDisposables: [String: [PolarDeviceDataType: Disposable?]] = [:]
+    private var searchDisposable: Disposable?
     private let disposeBag = DisposeBag()
-    private var h10ExerciseEntry: PolarExerciseEntry?
-    
-    private var searchDevicesTask: Task<Void, Never>? = nil
     
   override init() {
         super.init()
@@ -73,1340 +27,1438 @@ class PolarSdk : CAPPlugin, ObservableObject {
         api.logger = self
     }
     
-    /*func broadcastToggle() {
-        if isBroadcastListenOn == false {
-            isBroadcastListenOn = true
-            broadcastDisposable = api.startListenForPolarHrBroadcasts(nil)
-                .observe(on: MainScheduler.instance)
-                .subscribe{ e in
-                    switch e {
-                    case .completed:
-                        self.isBroadcastListenOn = false
-                        NSLog("Broadcast listener completed")
-                    case .error(let err):
-                        self.isBroadcastListenOn = false
-                        NSLog("Broadcast listener failed. Reason: \(err)")
-                    case .next(let broadcast):
-                        NSLog("HR BROADCAST \(broadcast.deviceInfo.name) HR:\(broadcast.hr) Batt: \(broadcast.batteryStatus)")
-                    }
-                }
-        } else {
-            isBroadcastListenOn = false
-            broadcastDisposable?.dispose()
-        }
-    }
-    
-    func updateSelectedDevice( deviceId : String) {
-        if case .disconnected = deviceConnectionState {
-            Task { @MainActor in
-                self.deviceConnectionState = DeviceConnectionState.disconnected(deviceId)
-            }
-        }
-    }
-    
-    func connectToDevice() {
-        if case .disconnected(let deviceId) = deviceConnectionState {
-            do {
-                try api.connectToDevice(deviceId)
-            } catch let err {
-                NSLog("Failed to connect to \(deviceId). Reason \(err)")
-            }
-        }
-    }*/
-    
-  @objc func disconnectPolar(_ call: CAPPluginCall) {
-        if case .connected(let deviceId) = deviceConnectionState {
-            do {
-                try api.disconnectFromDevice(deviceId)
-                call.resolve(["value": true])
-            } catch let err {
-                NSLog("Failed to disconnect from \(deviceId). Reason \(err)")
-            }
-        }
-    }
-    
-    @objc func connectPolar(_ call: CAPPluginCall) {
-        autoConnectDisposable?.dispose()
-        autoConnectDisposable = api.startAutoConnectToDevice(-60, service: nil, polarDeviceType: "H10")
-            .subscribe{ e in
-                switch e {
-                case .completed:
-                    NSLog("auto connect search complete")
-                    self.getOnlineStreamSettings(feature: PolarDeviceDataType.ecg)
-                    var result = JSObject()
-                    result["value"] = true
-                    call.resolve(result)
-                case .error(let err):
-                    NSLog("auto connect failed: \(err)")
-                }
-            }
-    }
-  
-  /*
-    func startDevicesSearch() {
-        searchDevicesTask = Task {
-            await searchDevicesAsync()
-        }
-    }
-    
-    func stopDevicesSearch() {
-        searchDevicesTask?.cancel()
-        searchDevicesTask = nil
-        Task { @MainActor in
-            self.deviceSearch.isSearching = DeviceSearchState.success
-        }
-    }
-    
-    private func searchDevicesAsync() async {
-        Task { @MainActor in
-            self.deviceSearch.foundDevices.removeAll()
-            self.deviceSearch.isSearching = DeviceSearchState.inProgress
+    @objc func connectToDevice(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
         }
         
         do {
-            for try await value in api.searchForDevice().values {
-                Task { @MainActor in
-                    self.deviceSearch.foundDevices.append(value)
-                }
-            }
-            Task { @MainActor in
-                self.deviceSearch.isSearching = DeviceSearchState.success
-            }
+            try api.connectToDevice(identifier)
+            call.resolve()
         } catch let err {
-            let deviceSearchFailed = "device search failed: \(err)"
-            NSLog(deviceSearchFailed)
-            Task { @MainActor in
-                self.deviceSearch.isSearching = DeviceSearchState.failed(error: deviceSearchFailed)
-            }
-        }
-    } */
-    
-   
-    func getOnlineStreamSettings(feature: PolarBleSdk.PolarDeviceDataType) {
-        if case .connected(let deviceId) = deviceConnectionState {
-            NSLog("Online stream settings fetch for \(feature)")
-            api.requestStreamSettings(deviceId, feature: feature)
-                .observe(on: MainScheduler.instance)
-                .subscribe{ e in
-                    switch e {
-                    case .success(let settings):
-                        NSLog("Online stream settings fetch completed for \(feature)")
-                        
-                        var receivedSettings:[TypeSetting] = []
-                        for setting in settings.settings {
-                            var values:[Int] = []
-                            for settingsValue in setting.value {
-                                values.append(Int(settingsValue))
-                            }
-                            receivedSettings.append(TypeSetting(type: setting.key, values: values))
-                        }
-                        
-                        self.onlineStreamSettings = RecordingSettings(feature: feature, settings: receivedSettings)
-                      
-                  
-                        
-                    case .failure(let err):
-                        self.somethingFailed(text: "Online stream settings request failed: \(err)")
-                        self.onlineStreamSettings = nil
-                    }
-                }.disposed(by: disposeBag)
-        } else {
-            NSLog("Online stream settings request failed. Device is not connected \(deviceConnectionState)")
-        }
-    }
-      
-    /*
-    func getOfflineRecordingSettings(feature: PolarBleSdk.PolarDeviceDataType) {
-        if case .connected(let deviceId) = deviceConnectionState {
-            NSLog("Offline recording settings fetch for \(feature)")
-            api.requestOfflineRecordingSettings(deviceId, feature: feature)
-                .observe(on: MainScheduler.instance)
-                .subscribe{ e in
-                    switch e {
-                    case .success(let settings):
-                        NSLog("Offline recording settings fetch completed for \(feature)")
-                        var receivedSettings:[TypeSetting] = []
-                        for setting in settings.settings {
-                            var values:[Int] = []
-                            for settingsValue in setting.value {
-                                values.append(Int(settingsValue))
-                            }
-                            receivedSettings.append(TypeSetting(type: setting.key, values: values))
-                        }
-                        self.offlineRecordingSettings = RecordingSettings(feature: feature, settings: receivedSettings)
-                    case .failure(let err):
-                        self.somethingFailed(text: "Offline recording settings request failed: \(err)")
-                        self.onlineStreamSettings = nil
-                    }
-                }.disposed(by: disposeBag)
-        } else {
-            NSLog("Offline recording settings request failed. Device is not connected \(deviceConnectionState)")
-        }
-    }*/
-    
-    func onlineStreamStop(feature: PolarBleSdk.PolarDeviceDataType) {
-        onlineStreamingDisposables[feature]??.dispose()
-    }
-  
-    @objc func stopHR(_ call: CAPPluginCall) {
-      onlineStreamStop(feature: PolarBleSdk.PolarDeviceDataType.hr)
-      call.resolve(["value": true])
-    }
-  
-    @objc func stopEcg(_ call: CAPPluginCall) {
-      onlineStreamStop(feature: PolarBleSdk.PolarDeviceDataType.ecg)
-      call.resolve(["value": true])
-    }
-    /*
-    func listOfflineRecordings() async {
-        if case .connected(let deviceId) = deviceConnectionState {
-            
-            Task { @MainActor in
-                self.offlineRecordingEntries.entries.removeAll()
-                self.offlineRecordingEntries.isFetching = true
-            }
-            NSLog("Start offline recording listing")
-            api.listOfflineRecordings(deviceId)
-                .observe(on: MainScheduler.instance)
-                .debug("listOfflineRecordings")
-                .do(
-                    onDispose: {
-                        self.offlineRecordingEntries.isFetching = false
-                    })
-                .subscribe{ e in
-                    switch e {
-                    case .next(let entry):
-                        self.offlineRecordingEntries.entries.append(entry)
-                    case .error(let err):
-                        NSLog("Offline recording listing error: \(err)")
-                    case .completed:
-                        NSLog("Offline recording listing completed")
-                    }
-                }.disposed(by: disposeBag)
+            call.reject("Failed to connect to \(identifier). Reason \(err)")
         }
     }
     
-    func getOfflineRecordingStatus() async {
-        if case .connected(let deviceId) = deviceConnectionState {
-            NSLog("getOfflineRecordingStatus")
-            api.getOfflineRecordingStatus(deviceId)
-                .observe(on: MainScheduler.instance)
-                .subscribe { e in
-                    switch e {
-                    case .success(let offlineRecStatus):
-                        NSLog("Enabled offline rec features \(offlineRecStatus)")
-                        self.offlineRecordingFeature.isRecording = offlineRecStatus
-                        
-                    case .failure(let err):
-                        NSLog("Failed to get status of offline recording \(err)")
-                    }
-                }.disposed(by: disposeBag)
-        }
-    }
-    
-    func removeOfflineRecording(offlineRecordingEntry: PolarOfflineRecordingEntry) async {
-        if case .connected(let deviceId) = deviceConnectionState {
-            do {
-                NSLog("start offline recording removal")
-                let _: Void = try await api.removeOfflineRecord(deviceId, entry: offlineRecordingEntry).value
-                NSLog("offline recording removal completed")
-                Task { @MainActor in
-                    self.offlineRecordingEntries.entries.removeAll{$0 == offlineRecordingEntry}
-                }
-            } catch let err {
-                NSLog("offline recording remove failed: \(err)")
-            }
-        }
-    }
-    
-    func getOfflineRecording(offlineRecordingEntry: PolarOfflineRecordingEntry) async {
-        if case .connected(let deviceId) = deviceConnectionState {
-            Task { @MainActor in
-                self.offlineRecordingData.loadState = OfflineRecordingDataLoadingState.inProgress
-            }
-            
-            do {
-                NSLog("start offline recording \(offlineRecordingEntry.path) fetch")
-                let readStartTime = Date()
-                let offlineRecording: PolarOfflineRecordingData = try await api.getOfflineRecord(deviceId, entry: offlineRecordingEntry, secret: nil).value
-                let elapsedTime = Date().timeIntervalSince(readStartTime)
-                
-                switch offlineRecording {
-                case .accOfflineRecordingData(let data, let startTime, let settings):
-                    NSLog("ACC data received")
-                    Task { @MainActor in
-                        self.offlineRecordingData.startTime = startTime
-                        self.offlineRecordingData.usedSettings = settings
-                        self.offlineRecordingData.data = dataHeaderString(.acc) + dataToString(data)
-                        self.offlineRecordingData.dataSize = offlineRecordingEntry.size
-                        self.offlineRecordingData.downLoadTime = elapsedTime
-                    }
-                case .gyroOfflineRecordingData(let data, startTime: let startTime, settings: let settings):
-                    NSLog("GYR data received")
-                    Task { @MainActor in
-                        self.offlineRecordingData.startTime = startTime
-                        self.offlineRecordingData.usedSettings = settings
-                        self.offlineRecordingData.data = dataHeaderString(.gyro) + dataToString(data)
-                        self.offlineRecordingData.dataSize = offlineRecordingEntry.size
-                        self.offlineRecordingData.downLoadTime = elapsedTime
-                    }
-                case .magOfflineRecordingData(let data, startTime: let startTime, settings: let settings):
-                    NSLog("MAG data received")
-                    Task { @MainActor in
-                        self.offlineRecordingData.startTime = startTime
-                        self.offlineRecordingData.usedSettings = settings
-                        self.offlineRecordingData.data = dataHeaderString(.magnetometer) + dataToString(data)
-                        self.offlineRecordingData.dataSize = offlineRecordingEntry.size
-                        self.offlineRecordingData.downLoadTime = elapsedTime
-                    }
-                case .ppgOfflineRecordingData(let data, startTime: let startTime, settings: let settings):
-                    NSLog("PPG data received")
-                    Task { @MainActor in
-                        self.offlineRecordingData.startTime = startTime
-                        self.offlineRecordingData.usedSettings = settings
-                        self.offlineRecordingData.data = dataHeaderString(.ppg) + dataToString(data)
-                        self.offlineRecordingData.dataSize = offlineRecordingEntry.size
-                        self.offlineRecordingData.downLoadTime = elapsedTime
-                    }
-                case .ppiOfflineRecordingData(let data, startTime: let startTime):
-                    NSLog("PPI data received")
-                    Task { @MainActor in
-                        self.offlineRecordingData.startTime = startTime
-                        self.offlineRecordingData.usedSettings = nil
-                        self.offlineRecordingData.data = dataHeaderString(.ppi) + dataToString(data)
-                        self.offlineRecordingData.dataSize = offlineRecordingEntry.size
-                        self.offlineRecordingData.downLoadTime = elapsedTime
-                    }
-                case .hrOfflineRecordingData(let data, startTime: let startTime):
-                    NSLog("HR data received")
-                    Task { @MainActor in
-                        self.offlineRecordingData.startTime = startTime
-                        self.offlineRecordingData.usedSettings = nil
-                        self.offlineRecordingData.data = dataHeaderString(.hr) + dataToString(data)
-                        self.offlineRecordingData.dataSize = offlineRecordingEntry.size
-                        self.offlineRecordingData.downLoadTime = elapsedTime
-                    }
-                case .temperatureOfflineRecordingData(_, startTime: let startTime): break
-                  //do nothing
-                }
-                Task { @MainActor in
-                    self.offlineRecordingData.loadState = OfflineRecordingDataLoadingState.success
-                }
-            } catch let err {
-                NSLog("offline recording read failed: \(err)")
-                Task { @MainActor in
-                    self.offlineRecordingData.loadState = OfflineRecordingDataLoadingState.failed(error: "offline recording read failed: \(err)")
-                }
-            }
-        }
-    }
-    
-    func offlineRecordingStart(feature: PolarDeviceDataType, settings: RecordingSettings? = nil) {
-        if case .connected(let deviceId) = deviceConnectionState {
-            var logString:String = "Request offline recording \(feature) start with settings: "
-            
-            var polarSensorSettings:[PolarSensorSetting.SettingType : UInt32] = [:]
-            settings?.settings.forEach {
-                polarSensorSettings[$0.type] = UInt32($0.values[0])
-                logString.append(" \($0.type) \($0.values[0])")
-            }
-            NSLog(logString)
-            
-            api.startOfflineRecording(deviceId, feature: feature, settings: PolarSensorSetting(polarSensorSettings), secret: nil)
-                .observe(on: MainScheduler.instance)
-                .subscribe{ e in
-                    switch e {
-                    case .completed:
-                        self.offlineRecordingFeature.isRecording[feature] = true
-                        NSLog("offline recording \(feature) successfully started")
-                    case .error(let err):
-                        NSLog("failed to start offline recording \(feature). Reason: \(err)")
-                    }
-                }.disposed(by: disposeBag)
-        } else {
-            somethingFailed(text: "Device is not connected \(deviceConnectionState)")
-        }
-    }
-    
-    func offlineRecordingStop(feature: PolarDeviceDataType) {
-        if case .connected(let deviceId) = deviceConnectionState {
-            NSLog("Request offline recording \(feature) stop")
-            api.stopOfflineRecording(deviceId, feature: feature)
-                .observe(on: MainScheduler.instance)
-                .subscribe{ e in
-                    switch e {
-                    case .completed:
-                        self.offlineRecordingFeature.isRecording[feature] = false
-                        NSLog("offline recording \(feature) successfully stopped")
-                    case .error(let err):
-                        NSLog("failed to stop offline recording \(feature). Reason: \(err)")
-                    }
-                }.disposed(by: disposeBag)
-        } else {
-            somethingFailed(text: "Device is not connected \(deviceConnectionState)")
-        }
-    }
-    
-    func isStreamOn(feature: PolarBleSdk.PolarDeviceDataType) -> Bool {
-        if case .inProgress = self.onlineStreamingFeature.isStreaming[feature] {
-            return true
-        } else {
-            return false
-        }
-    }*/
-    
-      @objc func streamEcg(_ call: CAPPluginCall) {
-        Task {
-          NSLog("aaaaaaaaaaaaaaaaaaaaaaaaaa")
-          await self.setTime()
+    @objc func disconnectFromDevice(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
         }
         
+        do {
+            try api.disconnectFromDevice(identifier)
+            call.resolve()
+        } catch let err {
+            call.reject("Failed to disconnect from \(identifier). Reason \(err)")
+        }
+    }
+    
+    @objc func searchForDevice(_ call: CAPPluginCall) {
+        searchDisposable?.dispose()
+        searchDisposable = api.searchForDevice()
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { deviceInfo in
+                    var data = JSObject()
+                    data["deviceId"] = deviceInfo.deviceId
+                    data["address"] = deviceInfo.address.uuidString
+                    data["rssi"] = deviceInfo.rssi
+                    data["name"] = deviceInfo.name
+                    data["isConnectable"] = deviceInfo.connectable
+                    self.notifyListeners("deviceFound", data: data)
+                },
+                onError: { error in
+                    call.reject("Search failed: \(error)")
+                },
+                onCompleted: {
+                    call.resolve(["value": true])
+                }
+            )
+    }
+    
+    @objc func getAvailableOnlineStreamDataTypes(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
         
-        if case .connected(let deviceId) = deviceConnectionState {
+        api.getAvailableOnlineStreamDataTypes(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { dataTypes in
+                    let types = dataTypes.map { PolarDeviceDataType.allCases.firstIndex(of: $0)! }
+                    call.resolve(["types": types])
+                },
+                onFailure: { error in
+                    call.reject("Failed to get available data types: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func requestStreamSettings(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let featureIndex = call.getInt("feature"),
+              featureIndex < PolarDeviceDataType.allCases.count else {
+            call.reject("Missing or invalid parameters")
+            return
+        }
         
-            Task { @MainActor in
-                self.onlineStreamingFeature.isStreaming[.ecg] = OnlineStreamingState.inProgress
-            }
-            
-            //let logFile: (url: URL, fileHandle: FileHandle)? = openOnlineStreamLogFile(type: .ecg)
-
-          
-          
-          
-          let ecgSettings = PolarSensorSetting([
-              .sampleRate: 130,
-              .resolution: 14
-          ])
+        let feature = PolarDeviceDataType.allCases[featureIndex]
         
-          onlineStreamingDisposables[.ecg] = api.startEcgStreaming(deviceId, settings: ecgSettings)
-                .do(onDispose: {
-                  /*
-                    if let fileHandle = logFile?.fileHandle {
-                        self.closeOnlineStreamLogFile(fileHandle)
+        api.requestStreamSettings(identifier, feature: feature)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { settings in
+                    var settingsDict: [String: [Int]] = [:]
+                    for (key, values) in settings.settings {
+                        settingsDict[String(describing: key)] = values.map { Int($0) }
                     }
-                    Task { @MainActor in
-                        self.onlineStreamingFeature.isStreaming[.ecg] = OnlineStreamingState.success(url: logFile?.url)
-                    }
-                   */
-                })
-                .subscribe { e in
-                    switch e {
-                    case .next(let data):
-                        /*if let fileHandle = logFile?.fileHandle {
-                            self.writeOnlineStreamLogFile(fileHandle, data)
-                        }*/
-                        
-                        for item in data.samples {
-                          var data = JSObject()
-                          data["yV"] = String(item.voltage)
-                          data["timestamp"] = String(item.timeStamp)
-                          self.notifyListeners("ecgData", data: data)
-                          NSLog("ECG    µV: \(item.voltage) timeStamp: \(item.timeStamp)")
-                        }
-                    case .error(let err):
-                        NSLog("ECG stream failed: \(err)")
-                        call.reject("stream.ecg.failed")
-                        /*if let fileHandle = logFile?.fileHandle {
-                            self.writeErrorOnlineStreamLogFile(fileHandle, err)
-                        }*/
-                    case .completed:
-                        NSLog("ECG stream completed")
-                        call.resolve(["value": true])
-                    }
+                    call.resolve(["settings": settingsDict])
+                },
+                onFailure: { error in
+                    call.reject("Failed to request stream settings: \(error)")
                 }
-        } else {
-            NSLog("Device is not connected \(deviceConnectionState)")
-        }
-    }
-  /*
-    func accStreamStart(settings: PolarBleSdk.PolarSensorSetting) {
-        if case .connected(let deviceId) = deviceConnectionState {
-            
-            Task { @MainActor in
-                self.onlineStreamingFeature.isStreaming[.acc] = OnlineStreamingState.inProgress
-            }
-            
-            let logFile: (url: URL, fileHandle: FileHandle)? = openOnlineStreamLogFile(type: .acc)
-            
-            NSLog("ACC stream start: \(deviceId)")
-            onlineStreamingDisposables[.acc] = api.startAccStreaming(deviceId, settings: settings)
-                .do(onDispose: {
-                    if let fileHandle = logFile?.fileHandle {
-                        self.closeOnlineStreamLogFile(fileHandle)
-                    }
-                    Task { @MainActor in
-                        self.onlineStreamingFeature.isStreaming[.acc] = OnlineStreamingState.success(url: logFile?.url)
-                    }
-                })
-                .subscribe{ e in
-                    switch e {
-                    case .next(let data):
-                        if let fileHandle = logFile?.fileHandle {
-                            self.writeOnlineStreamLogFile(fileHandle, data)
-                        }
-                        for item in data.samples {
-                            NSLog("ACC    x: \(item.x) y: \(item.y) z: \(item.z) timeStamp: \(item.timeStamp)")
-                        }
-                    case .error(let err):
-                        NSLog("ACC stream failed: \(err)")
-                        if let fileHandle = logFile?.fileHandle {
-                            self.writeErrorOnlineStreamLogFile(fileHandle, err)
-                        }
-                    case .completed:
-                        NSLog("ACC stream completed")
-                        break
-                    }
-                }
-        } else {
-            somethingFailed(text: "Device is not connected \(deviceConnectionState)")
-        }
+            ).disposed(by: disposeBag)
     }
     
-    func magStreamStart(settings: PolarBleSdk.PolarSensorSetting) {
-        if case .connected(let deviceId) = deviceConnectionState {
-            
-            Task { @MainActor in
-                self.onlineStreamingFeature.isStreaming[.magnetometer] = OnlineStreamingState.inProgress
-            }
-            let logFile: (url: URL, fileHandle: FileHandle)? = openOnlineStreamLogFile(type: .magnetometer)
-            
-            onlineStreamingDisposables[.magnetometer] = api.startMagnetometerStreaming(deviceId, settings: settings)
-                .do(onDispose: {
-                    if let fileHandle = logFile?.fileHandle {
-                        self.closeOnlineStreamLogFile(fileHandle)
-                    }
-                    Task { @MainActor in
-                        self.onlineStreamingFeature.isStreaming[.magnetometer] = OnlineStreamingState.success(url: logFile?.url)
-                    }
-                })
-                .subscribe{ e in
-                    switch e {
-                    case .next(let data):
-                        if let fileHandle = logFile?.fileHandle {
-                            self.writeOnlineStreamLogFile(fileHandle, data)
-                        }
-                        for item in data.samples {
-                            NSLog("MAG    x: \(item.x) y: \(item.y) z: \(item.z) timeStamp: \(item.timeStamp)")
-                        }
-                    case .error(let err):
-                        NSLog("MAG stream failed: \(err)")
-                        if let fileHandle = logFile?.fileHandle {
-                            self.writeErrorOnlineStreamLogFile(fileHandle, err)
-                        }
-                    case .completed:
-                        NSLog("MAG stream completed")
-                    }
-                }
-        } else {
-            NSLog("Device is not connected \(deviceConnectionState)")
+    @objc func startHrStreaming(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
         }
-    }
-    
-    func gyrStreamStart(settings: PolarBleSdk.PolarSensorSetting) {
-        if case .connected(let deviceId) = deviceConnectionState {
-            
-            Task { @MainActor in
-                self.onlineStreamingFeature.isStreaming[.gyro] = OnlineStreamingState.inProgress
-            }
-            
-            let logFile: (url: URL, fileHandle: FileHandle)? = openOnlineStreamLogFile(type: .gyro)
-            
-            onlineStreamingDisposables[.gyro] = api.startGyroStreaming(deviceId, settings: settings)
-                .do(onDispose: {
-                    if let fileHandle = logFile?.fileHandle {
-                        self.closeOnlineStreamLogFile(fileHandle)
-                    }
-                    Task { @MainActor in
-                        self.onlineStreamingFeature.isStreaming[.gyro] = OnlineStreamingState.success(url: logFile?.url)
-                    }
-                })
-                .subscribe{ e in
-                    switch e {
-                    case .next(let data):
-                        if let fileHandle = logFile?.fileHandle {
-                            self.writeOnlineStreamLogFile(fileHandle, data)
-                        }
-                        for item in data.samples {
-                            NSLog("GYR    x: \(item.x) y: \(item.y) z: \(item.z) timeStamp: \(item.timeStamp)")
-                        }
-                    case .error(let err):
-                        NSLog("GYR stream failed: \(err)")
-                        if let fileHandle = logFile?.fileHandle {
-                            self.writeErrorOnlineStreamLogFile(fileHandle, err)
-                        }
-                    case .completed:
-                        NSLog("GYR stream completed")
-                    }
-                }
-        } else {
-            NSLog("Device is not connected \(deviceConnectionState)")
+        
+        if onlineStreamingDisposables[identifier] == nil {
+            onlineStreamingDisposables[identifier] = [:]
         }
-    }
-    
-    func ppgStreamStart(settings: PolarBleSdk.PolarSensorSetting) {
-        if case .connected(let deviceId) = deviceConnectionState {
-            
-            Task { @MainActor in
-                self.onlineStreamingFeature.isStreaming[.ppg] = OnlineStreamingState.inProgress
-            }
-            
-            let logFile: (url: URL, fileHandle: FileHandle)? = openOnlineStreamLogFile(type: .ppg)
-            
-            onlineStreamingDisposables[.ppg] = api.startPpgStreaming(deviceId, settings: settings)
-                .do(onDispose: {
-                    if let fileHandle = logFile?.fileHandle {
-                        self.closeOnlineStreamLogFile(fileHandle)
-                    }
-                    Task { @MainActor in
-                        self.onlineStreamingFeature.isStreaming[.ppg] = OnlineStreamingState.success(url: logFile?.url)
-                    }
-                })
-                .subscribe{ e in
-                    switch e {
-                    case .next(let data):
-                        if(data.type == PpgDataType.ppg3_ambient1) {
-                            if let fileHandle = logFile?.fileHandle {
-                                self.writeOnlineStreamLogFile(fileHandle, data)
-                            }
-                            
-                            for item in data.samples {
-                                NSLog("PPG  ppg0: \(item.channelSamples[0]) ppg1: \(item.channelSamples[1]) ppg2: \(item.channelSamples[2]) ambient: \(item.channelSamples[3]) timeStamp: \(item.timeStamp)")
-                            }
-                        }
-                    case .error(let err):
-                        NSLog("PPG stream failed: \(err)")
-                        if let fileHandle = logFile?.fileHandle {
-                            self.writeErrorOnlineStreamLogFile(fileHandle, err)
-                        }
-                    case .completed:
-                        NSLog("PPG stream completed")
-                    }
-                }
-        } else {
-            NSLog("Device is not connected \(deviceConnectionState)")
-        }
-    }
-    
-    func ppiStreamStart() {
-        if case .connected(let deviceId) = deviceConnectionState {
-            
-            Task { @MainActor in
-                self.onlineStreamingFeature.isStreaming[.ppi] = OnlineStreamingState.inProgress
-            }
-            
-            let logFile: (url: URL, fileHandle: FileHandle)? = openOnlineStreamLogFile(type: .ppi)
-            
-            onlineStreamingDisposables[.ppi] = api.startPpiStreaming(deviceId)
-                .do(onDispose: {
-                    if let fileHandle = logFile?.fileHandle {
-                        self.closeOnlineStreamLogFile(fileHandle)
-                    }
-                    Task { @MainActor in
-                        self.onlineStreamingFeature.isStreaming[.ppi] = OnlineStreamingState.success(url: logFile?.url)
-                    }
-                })
-                .subscribe{ e in
-                    switch e {
-                    case .next(let data):
-                        if let fileHandle = logFile?.fileHandle {
-                            self.writeOnlineStreamLogFile(fileHandle, data)
-                        }
-                        
-                        for item in data.samples {
-                            NSLog("PPI    PeakToPeak(ms): \(item.ppInMs) sample.blockerBit: \(item.blockerBit)  errorEstimate: \(item.ppErrorEstimate)")
-                        }
-                    case .error(let err):
-                        NSLog("PPI stream failed: \(err)")
-                        if let fileHandle = logFile?.fileHandle {
-                            self.writeErrorOnlineStreamLogFile(fileHandle, err)
-                        }
-                    case .completed:
-                        NSLog("PPI stream completed")
-                    }
-                }
-        } else {
-            NSLog("Device is not connected \(deviceConnectionState)")
-        }
-    }
-    */
-    @objc func streamHR(_ call: CAPPluginCall) {
-        if case .connected(let deviceId) = deviceConnectionState {
-            
-            Task { @MainActor in
-                self.onlineStreamingFeature.isStreaming[.hr] = OnlineStreamingState.inProgress
-            }
-          
-            onlineStreamingDisposables[.hr] = api.startHrStreaming(deviceId)
-                .do(onDispose: {
-                    /*if let fileHandle = logFile?.fileHandle {
-                        self.closeOnlineStreamLogFile(fileHandle)
-                    }
-                    Task { @MainActor in
-                        self.onlineStreamingFeature.isStreaming[.hr] = OnlineStreamingState.success(url: logFile?.url)
-                    }*/
-                })
-                .subscribe{ e in
-                    switch e {
-                    case .next(let hrData):
-                      NSLog("hrData: \(hrData)")
-                        /*if let fileHandle = logFile?.fileHandle {
-                            self.writeOnlineStreamLogFile(fileHandle, hrData)
-                        }*/
+        
+        onlineStreamingDisposables[identifier]?[.hr] = api.startHrStreaming(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { hrData in
+                    for sample in hrData {
                         var data = JSObject()
-                        data["bpm"] = String(Int(hrData[0].hr))
-                        data["rrs"] = hrData[0].rrsMs as [JSValue]
-                        data["timestamp"] = Int64(Date().timeIntervalSince1970 * 1000) as any JSValue
-                        NSLog("Sending HR data: \(data)")
-
+                        data["bpm"] = Int(sample.hr)
+                        data["rrs"] = sample.rrsMs
+                        data["timestamp"] = Int64(Date().timeIntervalSince1970 * 1000)
                         self.notifyListeners("hrData", data: data)
-                    case .error(let err):
-                        NSLog("Hr stream failed: \(err)")
-                        call.reject("stream.hr.failed")
-                        /*if let fileHandle = logFile?.fileHandle {
-                            self.writeErrorOnlineStreamLogFile(fileHandle, err)
-                        }*/
-                    case .completed:
-                        NSLog("Hr stream completed")
-                        call.resolve(["value": true])
                     }
+                },
+                onError: { error in
+                    call.reject("HR stream failed: \(error)")
+                },
+                onCompleted: {
+                    call.resolve(["value": true])
                 }
-        } else {
-            NSLog("Device is not connected \(deviceConnectionState)")
-        }
-    }
-    /*
-    func sdkModeToggle() {
-        if case .connected(let deviceId) = deviceConnectionState {
-            if self.sdkModeFeature.isEnabled {
-                api.disableSDKMode(deviceId)
-                    .observe(on: MainScheduler.instance)
-                    .subscribe{ e in
-                        switch e {
-                        case .completed:
-                            NSLog("SDK mode disabled")
-                            Task { @MainActor in
-                                self.sdkModeFeature.isEnabled = false
-                            }
-                        case .error(let err):
-                            self.somethingFailed(text: "SDK mode disable failed: \(err)")
-                        }
-                    }.disposed(by: disposeBag)
-            } else {
-                api.enableSDKMode(deviceId)
-                    .observe(on: MainScheduler.instance)
-                    .subscribe{ e in
-                        switch e {
-                        case .completed:
-                            NSLog("SDK mode enabled")
-                            Task { @MainActor in
-                                self.sdkModeFeature.isEnabled = true
-                            }
-                        case .error(let err):
-                            self.somethingFailed(text: "SDK mode enable failed: \(err)")
-                        }
-                    }.disposed(by: disposeBag)
-            }
-        } else {
-            NSLog("Device is not connected \(deviceConnectionState)")
-            Task { @MainActor in
-                self.sdkModeFeature.isEnabled = false
-            }
-        }
+            )
     }
     
-    func getSdkModeStatus() async {
-        if case .connected(let deviceId) = deviceConnectionState, self.sdkModeFeature.isSupported == true  {
-            do {
-                NSLog("get SDK mode status")
-                let isSdkModeEnabled: Bool = try await api.isSDKModeEnabled(deviceId).value
-                NSLog("SDK mode currently enabled: \(isSdkModeEnabled)")
-                Task { @MainActor in
-                    self.sdkModeFeature.isEnabled = isSdkModeEnabled
-                }
-            } catch let err {
-                Task { @MainActor in
-                    self.somethingFailed(text: "SDK mode status request failed: \(err)")
-                }
-            }
+    @objc func startEcgStreaming(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
         }
-    }
-    
-    func listH10Exercises() {
-        if case .connected(let deviceId) = deviceConnectionState {
-            h10ExerciseEntry = nil
-            api.fetchStoredExerciseList(deviceId)
-                .observe(on: MainScheduler.instance)
-                .subscribe{ e in
-                    switch e {
-                    case .completed:
-                        NSLog("list exercises completed")
-                    case .error(let err):
-                        NSLog("failed to list exercises: \(err)")
-                    case .next(let polarExerciseEntry):
-                        NSLog("entry: \(polarExerciseEntry.date.description) path: \(polarExerciseEntry.path) id: \(polarExerciseEntry.entryId)");
-                        self.h10ExerciseEntry = polarExerciseEntry
+        
+        let settings = parseSettings(call.getObject("settings"))
+        
+        if onlineStreamingDisposables[identifier] == nil {
+            onlineStreamingDisposables[identifier] = [:]
+        }
+        
+        onlineStreamingDisposables[identifier]?[.ecg] = api.startEcgStreaming(identifier, settings: settings ?? PolarSensorSetting([.sampleRate: 130, .resolution: 14]))
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { ecgData in
+                    for sample in ecgData.samples {
+                        var data = JSObject()
+                        data["yV"] = sample.voltage
+                        data["timestamp"] = sample.timeStamp
+                        self.notifyListeners("ecgData", data: data)
                     }
-                }.disposed(by: disposeBag)
-        }
+                },
+                onError: { error in
+                    call.reject("ECG stream failed: \(error)")
+                },
+                onCompleted: {
+                    call.resolve(["value": true])
+                }
+            )
     }
     
-    func h10ReadExercise() async {
-        if case .connected(let deviceId) = deviceConnectionState {
-            guard let e = h10ExerciseEntry else {
-                somethingFailed(text: "No exercise to read, please list the exercises first")
-                return
-            }
-            
-            do {
-                Task { @MainActor in
-                    self.h10RecordingFeature.isFetchingRecording = true
-                }
-                
-                let data:PolarExerciseData = try await api.fetchExercise(deviceId, entry: e).value
-                NSLog("exercise data count: \(data.samples.count) samples: \(data.samples)")
-                Task { @MainActor in
-                    self.h10RecordingFeature.isFetchingRecording = false
-                }
-                
-            } catch let err {
-                Task { @MainActor in
-                    self.h10RecordingFeature.isFetchingRecording = false
-                    self.somethingFailed(text: "read H10 exercise failed: \(err)")
-                }
-            }
+    @objc func startAccStreaming(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
         }
-    }
-    
-    func h10RemoveExercise() {
-        if case .connected(let deviceId) = deviceConnectionState {
-            guard let entry = h10ExerciseEntry else {
-                somethingFailed(text: "No exercise to read, please list the exercises first")
-                return
-            }
-            api.removeExercise(deviceId, entry: entry)
-                .observe(on: MainScheduler.instance)
-                .subscribe{ e in
-                    switch e {
-                    case .completed:
-                        self.h10ExerciseEntry = nil
-                        NSLog("remove completed")
-                    case .error(let err):
-                        NSLog("failed to remove exercise: \(err)")
+        
+        let settings = parseSettings(call.getObject("settings"))
+        
+        if onlineStreamingDisposables[identifier] == nil {
+            onlineStreamingDisposables[identifier] = [:]
+        }
+        
+        onlineStreamingDisposables[identifier]?[.acc] = api.startAccStreaming(identifier, settings: settings ?? PolarSensorSetting([:]))
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { accData in
+                    for sample in accData.samples {
+                        var data = JSObject()
+                        data["x"] = sample.x
+                        data["y"] = sample.y
+                        data["z"] = sample.z
+                        data["timestamp"] = sample.timeStamp
+                        self.notifyListeners("accData", data: data)
                     }
-                }.disposed(by: disposeBag)
-        }
+                },
+                onError: { error in
+                    call.reject("ACC stream failed: \(error)")
+                },
+                onCompleted: {
+                    call.resolve(["value": true])
+                }
+            )
     }
     
-    func h10RecordingToggle() {
-        if case .connected(let deviceId) = deviceConnectionState {
-            if self.h10RecordingFeature.isEnabled {
-                api.stopRecording(deviceId)
-                    .observe(on: MainScheduler.instance)
-                    .subscribe{ e in
-                        switch e {
-                        case .completed:
-                            NSLog("recording stopped")
-                            Task { @MainActor in
-                                self.h10RecordingFeature.isEnabled = false
-                            }
-                        case .error(let err):
-                            self.somethingFailed(text: "recording stop fail: \(err)")
-                        }
-                    }.disposed(by: disposeBag)
-            } else {
-                api.startRecording(deviceId, exerciseId: "TEST_APP_ID", interval: .interval_1s, sampleType: .rr)
-                    .observe(on: MainScheduler.instance)
-                    .subscribe{ e in
-                        switch e {
-                        case .completed:
-                            NSLog("recording started")
-                            Task { @MainActor in
-                                self.h10RecordingFeature.isEnabled = true
-                            }
-                        case .error(let err):
-                            self.somethingFailed(text: "recording start fail: \(err)")
-                        }
-                    }.disposed(by: disposeBag)
-            }
-        } else {
-            NSLog("Device is not connected \(deviceConnectionState)")
-            Task { @MainActor in
-                self.h10RecordingFeature.isEnabled = false
-            }
+    @objc func startGyroStreaming(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
         }
-    }
-    
-    func getH10RecordingStatus() {
-        if case .connected(let deviceId) = deviceConnectionState, self.h10RecordingFeature.isSupported {
-            api.requestRecordingStatus(deviceId)
-                .observe(on: MainScheduler.instance)
-                .subscribe{ e in
-                    switch e {
-                    case .failure(let err):
-                        self.somethingFailed(text: "H10 recording status request failed: \(err)")
-                    case .success(let pair):
-                        var recordingStatus = "Recording on: \(pair.ongoing)."
-                        if pair.ongoing {
-                            recordingStatus.append(" Recording started with id: \(pair.entryId)")
-                            Task { @MainActor in
-                                self.h10RecordingFeature.isEnabled = true
-                            }
-                        } else {
-                            Task { @MainActor in
-                                self.h10RecordingFeature.isEnabled = false
-                            }
-                        }
-                        NSLog(recordingStatus)
+        
+        let settings = parseSettings(call.getObject("settings"))
+        
+        if onlineStreamingDisposables[identifier] == nil {
+            onlineStreamingDisposables[identifier] = [:]
+        }
+        
+        onlineStreamingDisposables[identifier]?[.gyro] = api.startGyroStreaming(identifier, settings: settings ?? PolarSensorSetting([:]))
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { gyroData in
+                    for sample in gyroData.samples {
+                        var data = JSObject()
+                        data["x"] = sample.x
+                        data["y"] = sample.y
+                        data["z"] = sample.z
+                        data["timestamp"] = sample.timeStamp
+                        self.notifyListeners("gyroData", data: data)
                     }
-                }.disposed(by: disposeBag)
-        }
-    }
-    */
-    func setTime() async {
-        if case .connected(let deviceId) = deviceConnectionState {
-            do {
-                let time = Date()
-                let timeZone = TimeZone(secondsFromGMT: 0)!
-                NSLog(deviceId)
-                let _: Void = try await api.setLocalTime(deviceId, time: time, zone: timeZone).value
-                Task { @MainActor in
-                    let formatter = DateFormatter()
-                    formatter.dateStyle = .short
-                    formatter.timeStyle = .medium
-                    self.generalMessage = Message(text: "\(formatter.string(from: time)) set to device \(deviceId)")
+                },
+                onError: { error in
+                    call.reject("Gyro stream failed: \(error)")
+                },
+                onCompleted: {
+                    call.resolve(["value": true])
                 }
-            } catch let err {
-                Task { @MainActor in
-                    self.somethingFailed(text: "time set failed: \(err)")
-                }
-            }
-        } else {
-            Task { @MainActor in
-                self.somethingFailed(text: "time set failed. No device connected)")
-            }
-        }
+            )
     }
     
-    func getTime() async {
-        if case .connected(let deviceId) = deviceConnectionState {
-            do {
-                let date: Date = try await api.getLocalTime(deviceId).value
-                Task { @MainActor in
-                    let formatter = DateFormatter()
-                    formatter.dateStyle = .short
-                    formatter.timeStyle = .medium
-                    self.generalMessage = Message(text: "\(formatter.string(from: date)) read from the device \(deviceId)")
-                }
-            } catch let err {
-                Task { @MainActor in
-                    self.somethingFailed(text: "time get failed: \(err)")
-                }
-            }
-        } else {
-            Task { @MainActor in
-                self.somethingFailed(text: "time get failed. No device connected)")
-            }
+    @objc func startMagnetometerStreaming(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
         }
+        
+        let settings = parseSettings(call.getObject("settings"))
+        
+        if onlineStreamingDisposables[identifier] == nil {
+            onlineStreamingDisposables[identifier] = [:]
+        }
+        
+        onlineStreamingDisposables[identifier]?[.magnetometer] = api.startMagnetometerStreaming(identifier, settings: settings ?? PolarSensorSetting([:]))
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { magData in
+                    for sample in magData.samples {
+                        var data = JSObject()
+                        data["x"] = sample.x
+                        data["y"] = sample.y
+                        data["z"] = sample.z
+                        data["timestamp"] = sample.timeStamp
+                        self.notifyListeners("magnetometerData", data: data)
+                    }
+                },
+                onError: { error in
+                    call.reject("Magnetometer stream failed: \(error)")
+                },
+                onCompleted: {
+                    call.resolve(["value": true])
+                }
+            )
     }
     
-  /*
-    func getDiskSpace() async {
-        if case .connected(let deviceId) = deviceConnectionState {
-            do {
-                let diskSpace: PolarDiskSpaceData = try await api.getDiskSpace(deviceId).value
-                Task { @MainActor in
-                    self.generalMessage = Message(text: String(describing: diskSpace))
-                }
-            } catch let err {
-                Task { @MainActor in
-                    self.somethingFailed(text: "disk space get failed: \(err)")
-                }
-            }
-        } else {
-            Task { @MainActor in
-                self.somethingFailed(text: "disk space get failed. No device connected)")
-            }
+    @objc func startPpgStreaming(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
         }
+        
+        let settings = parseSettings(call.getObject("settings"))
+        
+        if onlineStreamingDisposables[identifier] == nil {
+            onlineStreamingDisposables[identifier] = [:]
+        }
+        
+        onlineStreamingDisposables[identifier]?[.ppg] = api.startPpgStreaming(identifier, settings: settings ?? PolarSensorSetting([:]))
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { ppgData in
+                    for sample in ppgData.samples {
+                        var data = JSObject()
+                        data["ppg0"] = sample.channelSamples.count > 0 ? sample.channelSamples[0] : 0
+                        data["ppg1"] = sample.channelSamples.count > 1 ? sample.channelSamples[1] : 0
+                        data["ppg2"] = sample.channelSamples.count > 2 ? sample.channelSamples[2] : 0
+                        data["ambient"] = sample.channelSamples.count > 3 ? sample.channelSamples[3] : 0
+                        data["timestamp"] = sample.timeStamp
+                        self.notifyListeners("ppgData", data: data)
+                    }
+                },
+                onError: { error in
+                    call.reject("PPG stream failed: \(error)")
+                },
+                onCompleted: {
+                    call.resolve(["value": true])
+                }
+            )
     }
     
-    func setLedConfig(ledConfig: LedConfig) async {
-        if case .connected(let deviceId) = deviceConnectionState {
-            do {
-                let _: Void = try await api.setLedConfig(deviceId, ledConfig: ledConfig).value
-                Task { @MainActor in
-                    self.generalMessage = Message(text: "setLedConfig() set to: \(ledConfig)")
-                }
-            } catch let err {
-                Task { @MainActor in
-                    self.somethingFailed(text: "setLedConfig() error: \(err)")
-                }
-
-            }
-        } else {
-            Task { @MainActor in
-                self.somethingFailed(text: "setLedConfig() failed. No device connected)")
-            }
+    @objc func startPpiStreaming(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
         }
-    }
-
-    func doFactoryReset(preservePairingInformation: Bool) async {
-        if case .connected(let deviceId) = deviceConnectionState {
-            do {
-                let _: Void = try await api.doFactoryReset(deviceId, preservePairingInformation: preservePairingInformation).value
-                Task { @MainActor in
-                    self.generalMessage = Message(text: "Send factory reset notification to device: \(deviceId)")
-                }
-            } catch let err {
-                Task { @MainActor in
-                    self.somethingFailed(text: "doFactoryReset() error: \(err)")
-                }
-
-            }
-        } else {
-            Task { @MainActor in
-                self.somethingFailed(text: "doFactoryReset() failed. No device connected)")
-            }
+        
+        if onlineStreamingDisposables[identifier] == nil {
+            onlineStreamingDisposables[identifier] = [:]
         }
-    }
-    */
-    
-    private func somethingFailed(text: String) {
-        self.generalMessage = Message(text: "Error: \(text)")
-        NSLog("Error \(text)")
-    }
-    /*
-    private func dataHeaderString(_ type: PolarDeviceDataType) -> String {
-        var result = ""
-        switch type {
-        case .ecg:
-            result = "TIMESTAMP ECG(microV)\n"
-        case .acc:
-            result = "TIMESTAMP X(mg) Y(mg) Z(mg)\n"
-        case .ppg:
-            result =  "TIMESTAMP PPG0 PPG1 PPG2 AMBIENT\n"
-        case .ppi:
-            result = "PPI(ms) HR ERROR_ESTIMATE BLOCKER_BIT SKIN_CONTACT_SUPPORT SKIN_CONTACT_STATUS\n"
-        case .gyro:
-            result =  "TIMESTAMP X(deg/sec) Y(deg/sec) Z(deg/sec)\n"
-        case .magnetometer:
-            result =  "TIMESTAMP X(Gauss) Y(Gauss) Z(Gauss)\n"
-        case .hr:
-            result = "HR CONTACT_SUPPORTED CONTACT_STATUS RR_AVAILABLE RR(ms)\n"
-        case .temperature: break
-          //do nothing
-        case .pressure: break
-          //do nothing
-        }
-        return result
+        
+        onlineStreamingDisposables[identifier]?[.ppi] = api.startPpiStreaming(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { ppiData in
+                    for sample in ppiData.samples {
+                        var data = JSObject()
+                        data["ppInMs"] = sample.ppInMs
+                        data["hr"] = sample.hr
+                        data["blockerBit"] = sample.blockerBit
+                        data["errorEstimate"] = sample.ppErrorEstimate
+                        self.notifyListeners("ppiData", data: data)
+                    }
+                },
+                onError: { error in
+                    call.reject("PPI stream failed: \(error)")
+                },
+                onCompleted: {
+                    call.resolve(["value": true])
+                }
+            )
     }
     
-    private func dataToString<T>(_ data: T) -> String {
-        var result = ""
-        switch data {
-        case let polarAccData as PolarAccData:
-            result += polarAccData.samples.map{ "\($0.timeStamp) \($0.x) \($0.y) \($0.z)" }.joined(separator: "\n")
-        case let polarEcgData as PolarEcgData:
-            result +=  polarEcgData.samples.map{ "\($0.timeStamp) \($0.voltage)" }.joined(separator: "\n")
-        case let polarGyroData as PolarGyroData:
-            result +=  polarGyroData.samples.map{ "\($0.timeStamp) \($0.x) \($0.y) \($0.z)" }.joined(separator: "\n")
-        case let polarMagnetometerData as PolarMagnetometerData:
-            result +=  polarMagnetometerData.samples.map{ "\($0.timeStamp) \($0.x) \($0.y) \($0.z)" }.joined(separator: "\n")
-        case let polarPpgData as PolarPpgData:
-            if polarPpgData.type == PpgDataType.ppg3_ambient1 {
-                result += polarPpgData.samples.map{ "\($0.timeStamp) \($0.channelSamples[0]) \($0.channelSamples[1]) \($0.channelSamples[2]) \($0.channelSamples[3])" }.joined(separator: "\n")
-            }
-        case let polarPpiData as PolarPpiData:
-            result += polarPpiData.samples.map{ "\($0.ppInMs) \($0.hr) \($0.ppErrorEstimate) \($0.blockerBit) \($0.skinContactSupported) \($0.skinContactStatus)" }.joined(separator: "\n")
-            
-        case let polarHrData as PolarHrData:
-            result += polarHrData.map{ "\($0.hr) \($0.contactStatusSupported) \($0.contactStatus) \($0.rrAvailable) \($0.rrsMs.map { String($0) }.joined(separator: " "))" }.joined(separator: "\n")
-            
-        default:
-            result = "Data type not supported"
+    @objc func startTemperatureStreaming(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
         }
-        return result + "\n"
+        
+        let settings = parseSettings(call.getObject("settings"))
+        
+        if onlineStreamingDisposables[identifier] == nil {
+            onlineStreamingDisposables[identifier] = [:]
+        }
+        
+        onlineStreamingDisposables[identifier]?[.temperature] = api.startTemperatureStreaming(identifier, settings: settings ?? PolarSensorSetting([:]))
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { tempData in
+                    for sample in tempData.samples {
+                        var data = JSObject()
+                        data["temperature"] = sample.temperature
+                        data["timestamp"] = sample.timeStamp
+                        self.notifyListeners("temperatureData", data: data)
+                    }
+                },
+                onError: { error in
+                    call.reject("Temperature stream failed: \(error)")
+                },
+                onCompleted: {
+                    call.resolve(["value": true])
+                }
+            )
     }
     
-    private func openOnlineStreamLogFile(type: PolarDeviceDataType) -> (URL, FileHandle)? {
-        let firstRow = dataHeaderString(type).data(using: .utf8)!
-        let fileManager = FileManager.default
-        do {
-            let documentsDirectory = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-            
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyyMMdd_HHmmss"
-            
-            let currentDate = Date()
-            let dateString = dateFormatter.string(from: currentDate)
-            
-            let fileName = type.stringValue + "_" + dateString + ".txt"
-            let fileURL = documentsDirectory.appendingPathComponent(fileName)
-            
-            do {
-                try firstRow.write(to: fileURL)
-                let fileHandle = try FileHandle(forWritingTo: fileURL)
-                return (fileURL, fileHandle)
-            } catch let err {
-                NSLog("Failed create log file for data \(type). Reason \(err)")
-                return nil
-            }
-        } catch let err {
-            NSLog("Failed to get documents directory while trying to create log file for data \(type). Reason \(err)")
+    @objc func startPressureStreaming(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        let settings = parseSettings(call.getObject("settings"))
+        
+        if onlineStreamingDisposables[identifier] == nil {
+            onlineStreamingDisposables[identifier] = [:]
+        }
+        
+        onlineStreamingDisposables[identifier]?[.pressure] = api.startPressureStreaming(identifier, settings: settings ?? PolarSensorSetting([:]))
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { pressureData in
+                    for sample in pressureData.samples {
+                        var data = JSObject()
+                        data["pressure"] = sample.pressure
+                        data["timestamp"] = sample.timeStamp
+                        self.notifyListeners("pressureData", data: data)
+                    }
+                },
+                onError: { error in
+                    call.reject("Pressure stream failed: \(error)")
+                },
+                onCompleted: {
+                    call.resolve(["value": true])
+                }
+            )
+    }
+    
+    @objc func stopStreaming(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let featureIndex = call.getInt("feature"),
+              featureIndex < PolarDeviceDataType.allCases.count else {
+            call.reject("Missing or invalid parameters")
+            return
+        }
+        
+        let feature = PolarDeviceDataType.allCases[featureIndex]
+        onlineStreamingDisposables[identifier]?[feature]??.dispose()
+        call.resolve(["value": true])
+    }
+    
+    @objc func startRecording(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let exerciseId = call.getString("exerciseId"),
+              let intervalIndex = call.getInt("interval"),
+              let sampleTypeIndex = call.getInt("sampleType") else {
+            call.reject("Missing parameters")
+            return
+        }
+        
+        let interval = intervalIndex == 0 ? RecordingInterval.interval_1s : RecordingInterval.interval_5s
+        let sampleType = sampleTypeIndex == 0 ? SampleType.hr : SampleType.rr
+        
+        api.startRecording(identifier, exerciseId: exerciseId, interval: interval, sampleType: sampleType)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to start recording: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func stopRecording(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        api.stopRecording(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to stop recording: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func requestRecordingStatus(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        api.requestRecordingStatus(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { status in
+                    call.resolve([
+                        "ongoing": status.ongoing,
+                        "entryId": status.entryId
+                    ])
+                },
+                onFailure: { error in
+                    call.reject("Failed to get recording status: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func listExercises(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        var entries: [[String: Any]] = []
+        api.fetchStoredExerciseList(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { entry in
+                    let dateFormatter = ISO8601DateFormatter()
+                    entries.append([
+                        "path": entry.path,
+                        "date": dateFormatter.string(from: entry.date),
+                        "entryId": entry.entryId
+                    ])
+                },
+                onError: { error in
+                    call.reject("Failed to list exercises: \(error)")
+                },
+                onCompleted: {
+                    call.resolve(["entries": entries])
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func fetchExercise(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let entryDict = call.getObject("entry"),
+              let path = entryDict["path"] as? String,
+              let dateString = entryDict["date"] as? String,
+              let entryId = entryDict["entryId"] as? String else {
+            call.reject("Missing or invalid parameters")
+            return
+        }
+        
+        let dateFormatter = ISO8601DateFormatter()
+        guard let date = dateFormatter.date(from: dateString) else {
+            call.reject("Invalid date format")
+            return
+        }
+        
+        let entry = PolarExerciseEntry(path: path, date: date, entryId: entryId)
+        
+        api.fetchExercise(identifier, entry: entry)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { data in
+                    call.resolve([
+                        "interval": data.interval.rawValue,
+                        "samples": data.samples.map { Int($0.hr) }
+                    ])
+                },
+                onFailure: { error in
+                    call.reject("Failed to fetch exercise: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func removeExercise(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let entryDict = call.getObject("entry"),
+              let path = entryDict["path"] as? String,
+              let dateString = entryDict["date"] as? String,
+              let entryId = entryDict["entryId"] as? String else {
+            call.reject("Missing or invalid parameters")
+            return
+        }
+        
+        let dateFormatter = ISO8601DateFormatter()
+        guard let date = dateFormatter.date(from: dateString) else {
+            call.reject("Invalid date format")
+            return
+        }
+        
+        let entry = PolarExerciseEntry(path: path, date: date, entryId: entryId)
+        
+        api.removeExercise(identifier, entry: entry)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to remove exercise: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func setLedConfig(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let configDict = call.getObject("config"),
+              let enabled = configDict["ledEnabled"] as? Bool else {
+            call.reject("Missing or invalid parameters")
+            return
+        }
+        
+        let config = enabled ? LedConfig.ledAnimationEnabled : LedConfig.ledAnimationDisabled
+        
+        api.setLedConfig(identifier, ledConfig: config)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to set LED config: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func doFactoryReset(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let preservePairing = call.getBool("preservePairingInformation") else {
+            call.reject("Missing parameters")
+            return
+        }
+        
+        api.doFactoryReset(identifier, preservePairingInformation: preservePairing)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to do factory reset: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func enableSdkMode(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        api.enableSDKMode(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to enable SDK mode: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func disableSdkMode(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        api.disableSDKMode(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to disable SDK mode: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func isSdkModeEnabled(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        api.isSDKModeEnabled(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { enabled in
+                    call.resolve(["enabled": enabled])
+                },
+                onFailure: { error in
+                    call.reject("Failed to check SDK mode: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func getAvailableOfflineRecordingDataTypes(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        api.getAvailableOfflineRecordingDataTypes(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { dataTypes in
+                    let types = dataTypes.map { PolarDeviceDataType.allCases.firstIndex(of: $0)! }
+                    call.resolve(["types": types])
+                },
+                onFailure: { error in
+                    call.reject("Failed to get available offline recording data types: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func requestOfflineRecordingSettings(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let featureIndex = call.getInt("feature"),
+              featureIndex < PolarDeviceDataType.allCases.count else {
+            call.reject("Missing or invalid parameters")
+            return
+        }
+        
+        let feature = PolarDeviceDataType.allCases[featureIndex]
+        
+        api.requestOfflineRecordingSettings(identifier, feature: feature)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { settings in
+                    var settingsDict: [String: [Int]] = [:]
+                    for (key, values) in settings.settings {
+                        settingsDict[String(describing: key)] = values.map { Int($0) }
+                    }
+                    call.resolve(["settings": settingsDict])
+                },
+                onFailure: { error in
+                    call.reject("Failed to request offline recording settings: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func startOfflineRecording(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let featureIndex = call.getInt("feature"),
+              featureIndex < PolarDeviceDataType.allCases.count else {
+            call.reject("Missing or invalid parameters")
+            return
+        }
+        
+        let feature = PolarDeviceDataType.allCases[featureIndex]
+        let settings = parseSettings(call.getObject("settings"))
+        
+        api.startOfflineRecording(identifier, feature: feature, settings: settings, secret: nil)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to start offline recording: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func stopOfflineRecording(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let featureIndex = call.getInt("feature"),
+              featureIndex < PolarDeviceDataType.allCases.count else {
+            call.reject("Missing or invalid parameters")
+            return
+        }
+        
+        let feature = PolarDeviceDataType.allCases[featureIndex]
+        
+        api.stopOfflineRecording(identifier, feature: feature)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to stop offline recording: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func getOfflineRecordingStatus(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        api.getOfflineRecordingStatus(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { status in
+                    let features = status.compactMap { (key, value) -> Int? in
+                        value ? PolarDeviceDataType.allCases.firstIndex(of: key) : nil
+                    }
+                    call.resolve(["features": features])
+                },
+                onFailure: { error in
+                    call.reject("Failed to get offline recording status: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func listOfflineRecordings(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        var entries: [[String: Any]] = []
+        api.listOfflineRecordings(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onNext: { entry in
+                    let dateFormatter = ISO8601DateFormatter()
+                    entries.append([
+                        "path": entry.path,
+                        "size": entry.size,
+                        "date": dateFormatter.string(from: entry.date),
+                        "type": String(describing: entry.type)
+                    ])
+                },
+                onError: { error in
+                    call.reject("Failed to list offline recordings: \(error)")
+                },
+                onCompleted: {
+                    call.resolve(["entries": entries])
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func getOfflineRecord(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let entryDict = call.getObject("entry") else {
+            call.reject("Missing parameters")
+            return
+        }
+        
+        guard let path = entryDict["path"] as? String,
+              let size = entryDict["size"] as? Int,
+              let dateString = entryDict["date"] as? String,
+              let typeString = entryDict["type"] as? String else {
+            call.reject("Invalid entry parameters")
+            return
+        }
+        
+        let dateFormatter = ISO8601DateFormatter()
+        guard let date = dateFormatter.date(from: dateString) else {
+            call.reject("Invalid date format")
+            return
+        }
+        
+        let entry = PolarOfflineRecordingEntry(path: path, size: size, date: date, type: .init(rawValue: typeString) ?? .acc)
+        
+        api.getOfflineRecord(identifier, entry: entry, secret: nil)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { recordingData in
+                    var result: [String: Any] = [:]
+                    switch recordingData {
+                    case .accOfflineRecordingData(_, let startTime, let settings):
+                        result["startTime"] = dateFormatter.string(from: startTime)
+                        if let settings = settings {
+                            var settingsDict: [String: [Int]] = [:]
+                            for (key, values) in settings.settings {
+                                settingsDict[String(describing: key)] = values.map { Int($0) }
+                            }
+                            result["settings"] = settingsDict
+                        }
+                    case .gyroOfflineRecordingData(_, let startTime, let settings):
+                        result["startTime"] = dateFormatter.string(from: startTime)
+                        if let settings = settings {
+                            var settingsDict: [String: [Int]] = [:]
+                            for (key, values) in settings.settings {
+                                settingsDict[String(describing: key)] = values.map { Int($0) }
+                            }
+                            result["settings"] = settingsDict
+                        }
+                    case .magOfflineRecordingData(_, let startTime, let settings):
+                        result["startTime"] = dateFormatter.string(from: startTime)
+                        if let settings = settings {
+                            var settingsDict: [String: [Int]] = [:]
+                            for (key, values) in settings.settings {
+                                settingsDict[String(describing: key)] = values.map { Int($0) }
+                            }
+                            result["settings"] = settingsDict
+                        }
+                    case .ppgOfflineRecordingData(_, let startTime, let settings):
+                        result["startTime"] = dateFormatter.string(from: startTime)
+                        if let settings = settings {
+                            var settingsDict: [String: [Int]] = [:]
+                            for (key, values) in settings.settings {
+                                settingsDict[String(describing: key)] = values.map { Int($0) }
+                            }
+                            result["settings"] = settingsDict
+                        }
+                    case .ppiOfflineRecordingData(_, let startTime):
+                        result["startTime"] = dateFormatter.string(from: startTime)
+                    case .hrOfflineRecordingData(_, let startTime):
+                        result["startTime"] = dateFormatter.string(from: startTime)
+                    case .temperatureOfflineRecordingData(_, let startTime):
+                        result["startTime"] = dateFormatter.string(from: startTime)
+                    }
+                    call.resolve(result)
+                },
+                onFailure: { error in
+                    call.reject("Failed to get offline record: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func removeOfflineRecord(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let entryDict = call.getObject("entry"),
+              let path = entryDict["path"] as? String,
+              let size = entryDict["size"] as? Int,
+              let dateString = entryDict["date"] as? String,
+              let typeString = entryDict["type"] as? String else {
+            call.reject("Missing or invalid parameters")
+            return
+        }
+        
+        let dateFormatter = ISO8601DateFormatter()
+        guard let date = dateFormatter.date(from: dateString) else {
+            call.reject("Invalid date format")
+            return
+        }
+        
+        let entry = PolarOfflineRecordingEntry(path: path, size: size, date: date, type: .init(rawValue: typeString) ?? .acc)
+        
+        api.removeOfflineRecord(identifier, entry: entry)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to remove offline record: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func getDiskSpace(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        api.getDiskSpace(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { diskSpace in
+                    call.resolve([
+                        "freeSpace": diskSpace.freeSpace,
+                        "totalSpace": diskSpace.totalSpace
+                    ])
+                },
+                onFailure: { error in
+                    call.reject("Failed to get disk space: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func getLocalTime(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        api.getLocalTime(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { time in
+                    let dateFormatter = ISO8601DateFormatter()
+                    call.resolve(["time": dateFormatter.string(from: time)])
+                },
+                onFailure: { error in
+                    call.reject("Failed to get local time: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func setLocalTime(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let timeString = call.getString("time") else {
+            call.reject("Missing parameters")
+            return
+        }
+        
+        let dateFormatter = ISO8601DateFormatter()
+        guard let time = dateFormatter.date(from: timeString) else {
+            call.reject("Invalid time format")
+            return
+        }
+        
+        let timeZone = TimeZone.current
+        
+        api.setLocalTime(identifier, time: time, zone: timeZone)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to set local time: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func doFirstTimeUse(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let configDict = call.getObject("config") else {
+            call.reject("Missing parameters")
+            return
+        }
+        
+        guard let genderStr = configDict["gender"] as? String,
+              let birthDateStr = configDict["birthDate"] as? String,
+              let height = configDict["height"] as? Int,
+              let weight = configDict["weight"] as? Int,
+              let maxHeartRate = configDict["maxHeartRate"] as? Int,
+              let vo2Max = configDict["vo2Max"] as? Int,
+              let restingHeartRate = configDict["restingHeartRate"] as? Int,
+              let trainingBackground = configDict["trainingBackground"] as? Int,
+              let deviceTime = configDict["deviceTime"] as? String,
+              let typicalDay = configDict["typicalDay"] as? Int,
+              let sleepGoalMinutes = configDict["sleepGoalMinutes"] as? Int else {
+            call.reject("Invalid config parameters")
+            return
+        }
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        guard let birthDate = dateFormatter.date(from: birthDateStr) else {
+            call.reject("Invalid birth date format")
+            return
+        }
+        
+        let trainingBackgroundLevel: PolarFirstTimeUseConfig.TrainingBackground
+        switch trainingBackground {
+        case 10: trainingBackgroundLevel = .occasional
+        case 20: trainingBackgroundLevel = .regular
+        case 30: trainingBackgroundLevel = .frequent
+        case 40: trainingBackgroundLevel = .heavy
+        case 50: trainingBackgroundLevel = .semiPro
+        case 60: trainingBackgroundLevel = .pro
+        default: trainingBackgroundLevel = .occasional
+        }
+        
+        let typicalDayEnum: PolarFirstTimeUseConfig.TypicalDay
+        switch typicalDay {
+        case 1: typicalDayEnum = .mostlyMoving
+        case 2: typicalDayEnum = .mostlySitting
+        case 3: typicalDayEnum = .mostlyStanding
+        default: typicalDayEnum = .mostlySitting
+        }
+        
+        let config = PolarFirstTimeUseConfig(
+            gender: genderStr == "Male" ? .male : .female,
+            birthDate: birthDate,
+            height: Float(height),
+            weight: Float(weight),
+            maxHeartRate: maxHeartRate,
+            vo2Max: vo2Max,
+            restingHeartRate: restingHeartRate,
+            trainingBackground: trainingBackgroundLevel,
+            deviceTime: deviceTime,
+            typicalDay: typicalDayEnum,
+            sleepGoalMinutes: sleepGoalMinutes
+        )
+        
+        api.doFirstTimeUse(identifier, ftuConfig: config)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to do first time use: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func isFtuDone(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        api.isFtuDone(identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { done in
+                    call.resolve(["done": done])
+                },
+                onFailure: { error in
+                    call.reject("Failed to check FTU status: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func deleteStoredDeviceData(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let dataTypeIndex = call.getInt("dataType"),
+              let untilDateStr = call.getString("until") else {
+            call.reject("Missing parameters")
+            return
+        }
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        guard let untilDate = dateFormatter.date(from: untilDateStr) else {
+            call.reject("Invalid date format")
+            return
+        }
+        
+        guard dataTypeIndex < PolarStoredDataType.StoredDataType.allCases.count else {
+            call.reject("Invalid data type index")
+            return
+        }
+        
+        let dataType = PolarStoredDataType.StoredDataType.allCases[dataTypeIndex]
+        
+        api.deleteStoredDeviceData(identifier, dataType: dataType, until: untilDate)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to delete stored device data: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func deleteDeviceDateFolders(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let fromDateStr = call.getString("fromDate"),
+              let toDateStr = call.getString("toDate") else {
+            call.reject("Missing parameters")
+            return
+        }
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        guard let fromDate = dateFormatter.date(from: fromDateStr),
+              let toDate = dateFormatter.date(from: toDateStr) else {
+            call.reject("Invalid date format")
+            return
+        }
+        
+        api.deleteDeviceDateFolders(identifier, fromDate: fromDate, toDate: toDate)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to delete device date folders: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func getSteps(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let fromDateStr = call.getString("fromDate"),
+              let toDateStr = call.getString("toDate") else {
+            call.reject("Missing parameters")
+            return
+        }
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        guard let fromDate = dateFormatter.date(from: fromDateStr),
+              let toDate = dateFormatter.date(from: toDateStr) else {
+            call.reject("Invalid date format")
+            return
+        }
+        
+        api.getSteps(identifier: identifier, fromDate: fromDate, toDate: toDate)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { stepsData in
+                    let data = stepsData.map { step -> [String: Any] in
+                        [
+                            "date": dateFormatter.string(from: step.date),
+                            "steps": step.steps
+                        ]
+                    }
+                    call.resolve(["data": data])
+                },
+                onFailure: { error in
+                    call.reject("Failed to get steps: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func getDistance(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let fromDateStr = call.getString("fromDate"),
+              let toDateStr = call.getString("toDate") else {
+            call.reject("Missing parameters")
+            return
+        }
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        guard let fromDate = dateFormatter.date(from: fromDateStr),
+              let toDate = dateFormatter.date(from: toDateStr) else {
+            call.reject("Invalid date format")
+            return
+        }
+        
+        api.getDistance(identifier: identifier, fromDate: fromDate, toDate: toDate)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { distanceData in
+                    let data = distanceData.map { distance -> [String: Any] in
+                        [
+                            "date": dateFormatter.string(from: distance.date),
+                            "distance": distance.walkingDistance + distance.runningDistance
+                        ]
+                    }
+                    call.resolve(["data": data])
+                },
+                onFailure: { error in
+                    call.reject("Failed to get distance: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func getActiveTime(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let fromDateStr = call.getString("fromDate"),
+              let toDateStr = call.getString("toDate") else {
+            call.reject("Missing parameters")
+            return
+        }
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        guard let fromDate = dateFormatter.date(from: fromDateStr),
+              let toDate = dateFormatter.date(from: toDateStr) else {
+            call.reject("Invalid date format")
+            return
+        }
+        
+        api.getActiveTime(identifier: identifier, fromDate: fromDate, toDate: toDate)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { activeTimeData in
+                    let data = activeTimeData.map { activeTime -> [String: Any] in
+                        [
+                            "date": dateFormatter.string(from: activeTime.date),
+                            "activeTimeSeconds": activeTime.timeNonWear.seconds + activeTime.timeSleep.seconds + activeTime.timeSedentary.seconds + activeTime.timeLightActivity.seconds + activeTime.timeContinuousModerateActivity.seconds + activeTime.timeIntermittentModerateActivity.seconds + activeTime.timeContinuousVigorousActivity.seconds + activeTime.timeIntermittentVigorousActivity.seconds
+                        ]
+                    }
+                    call.resolve(["data": data])
+                },
+                onFailure: { error in
+                    call.reject("Failed to get active time: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func getActivitySampleData(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier"),
+              let fromDateStr = call.getString("fromDate"),
+              let toDateStr = call.getString("toDate") else {
+            call.reject("Missing parameters")
+            return
+        }
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        guard let fromDate = dateFormatter.date(from: fromDateStr),
+              let toDate = dateFormatter.date(from: toDateStr) else {
+            call.reject("Invalid date format")
+            return
+        }
+        
+        api.getActivitySampleData(identifier: identifier, fromDate: fromDate, toDate: toDate)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { activityData in
+                    call.resolve(["data": []])
+                },
+                onFailure: { error in
+                    call.reject("Failed to get activity sample data: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func sendInitializationAndStartSyncNotifications(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        api.sendInitializationAndStartSyncNotifications(identifier: identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve(["success": true])
+                },
+                onError: { error in
+                    call.reject("Failed to send initialization: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    @objc func sendTerminateAndStopSyncNotifications(_ call: CAPPluginCall) {
+        guard let identifier = call.getString("identifier") else {
+            call.reject("Missing identifier")
+            return
+        }
+        
+        api.sendTerminateAndStopSyncNotifications(identifier: identifier)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onCompleted: {
+                    call.resolve()
+                },
+                onError: { error in
+                    call.reject("Failed to send termination: \(error)")
+                }
+            ).disposed(by: disposeBag)
+    }
+    
+    private func parseSettings(_ settingsDict: JSObject?) -> PolarSensorSetting? {
+        guard let settingsDict = settingsDict,
+              let settings = settingsDict["settings"] as? [String: [Int]] else {
             return nil
         }
-    }
-    
-    private func writeOnlineStreamLogFile<T>(_ fileHandle: FileHandle, _ data: T) {
-        let dataRow = dataToString(data).data(using: .utf8)!
-        fileHandle.seekToEndOfFile()
-        fileHandle.write(dataRow)
-    }
-    
-    private func writeErrorOnlineStreamLogFile(_ fileHandle: FileHandle, _ err: Error) {
-        let errorString = "ERROR. Online stream closed because of error: \(err)"
-        let dataRow = errorString.data(using: .utf8)!
-        fileHandle.seekToEndOfFile()
-        fileHandle.write(dataRow)
-    }
-    
-    private func closeOnlineStreamLogFile(_ fileHandle: FileHandle) {
-        fileHandle.closeFile()
-    }
-    
-    func onlineStreamLogFileShared(at url: URL) {
-        let fileManager = FileManager.default
-        do {
-            try fileManager.removeItem(at: url)
-            resetStreamingURL(for: url, in: &self.onlineStreamingFeature)
-            NSLog("Online stream file deleted at: \(url)")
-        } catch {
-            NSLog("Error Online stream file delete: \(error)")
-        }
-    }
-    
-    private func resetStreamingURL(for url: URL, in feature: inout OnlineStreamingFeature) {
-        for (dataType, streamingState) in feature.isStreaming {
-            if case let .success(currentURL) = streamingState, currentURL == url {
-                feature.isStreaming[dataType] = .success(url: nil)
-                break
+        
+        var polarSettings: [PolarSensorSetting.SettingType: UInt32] = [:]
+        for (key, values) in settings {
+            if let settingType = parseSettingType(key), let value = values.first {
+                polarSettings[settingType] = UInt32(value)
             }
         }
+        
+        return PolarSensorSetting(polarSettings)
     }
-     */
-}
-
-fileprivate extension PolarDeviceDataType {
-    var stringValue: String {
-        switch self {
-        case .ecg:
-            return "ECG"
-        case .acc:
-            return "ACC"
-        case .ppg:
-            return "PPG"
-        case .ppi:
-            return "PPI"
-        case .gyro:
-            return "GYR"
-        case .magnetometer:
-            return "MAG"
-        case .hr:
-            return "HR"
-        case .temperature: break
-          //do nothing
-        case .pressure: break
-          //do nothing
+    
+    private func parseSettingType(_ key: String) -> PolarSensorSetting.SettingType? {
+        switch key.lowercased() {
+        case "samplerate": return .sampleRate
+        case "resolution": return .resolution
+        case "range": return .range
+        case "channels": return .channels
+        default: return nil
         }
-      return "null"
     }
 }
 
-
-// MARK: - PolarBleApiPowerStateObserver
 extension PolarSdk : PolarBleApiPowerStateObserver {
-    func blePowerOn() {
+    public func blePowerOn() {
         NSLog("BLE ON")
         Task { @MainActor in
             isBluetoothOn = true
         }
+        notifyListeners("blePowerStateChanged", data: ["enabled": true])
     }
     
-    func blePowerOff() {
+    public func blePowerOff() {
         NSLog("BLE OFF")
         Task { @MainActor in
             isBluetoothOn = false
         }
+        notifyListeners("blePowerStateChanged", data: ["enabled": false])
     }
 }
 
-// MARK: - PolarBleApiObserver
 extension PolarSdk : PolarBleApiObserver {
-    func deviceConnecting(_ polarDeviceInfo: PolarDeviceInfo) {
+    public func deviceConnecting(_ polarDeviceInfo: PolarDeviceInfo) {
         NSLog("DEVICE CONNECTING: \(polarDeviceInfo)")
         Task { @MainActor in
-            self.deviceConnectionState = DeviceConnectionState.connecting(polarDeviceInfo.deviceId)
+            self.deviceConnectionState[polarDeviceInfo.deviceId] = DeviceConnectionState.connecting(polarDeviceInfo.deviceId)
         }
+        var data = JSObject()
+        data["deviceId"] = polarDeviceInfo.deviceId
+        data["address"] = polarDeviceInfo.address.uuidString
+        data["rssi"] = polarDeviceInfo.rssi
+        data["name"] = polarDeviceInfo.name
+        data["isConnectable"] = polarDeviceInfo.connectable
+        notifyListeners("deviceConnecting", data: data)
     }
     
-    func deviceConnected(_ polarDeviceInfo: PolarDeviceInfo) {
+    public func deviceConnected(_ polarDeviceInfo: PolarDeviceInfo) {
         NSLog("DEVICE CONNECTED: \(polarDeviceInfo)")
         Task { @MainActor in
-            self.deviceConnectionState = DeviceConnectionState.connected(polarDeviceInfo.deviceId)
+            self.deviceConnectionState[polarDeviceInfo.deviceId] = DeviceConnectionState.connected(polarDeviceInfo.deviceId)
         }
+        var data = JSObject()
+        data["deviceId"] = polarDeviceInfo.deviceId
+        data["address"] = polarDeviceInfo.address.uuidString
+        data["rssi"] = polarDeviceInfo.rssi
+        data["name"] = polarDeviceInfo.name
+        data["isConnectable"] = polarDeviceInfo.connectable
+        notifyListeners("deviceConnected", data: data)
     }
     
-    func deviceDisconnected(_ polarDeviceInfo: PolarDeviceInfo, pairingError: Bool) {
+    public func deviceDisconnected(_ polarDeviceInfo: PolarDeviceInfo, pairingError: Bool) {
         NSLog("DISCONNECTED: \(polarDeviceInfo)")
         Task { @MainActor in
-            self.deviceConnectionState = DeviceConnectionState.disconnected(polarDeviceInfo.deviceId)
-            self.offlineRecordingFeature = OfflineRecordingFeature()
-            self.onlineStreamingFeature = OnlineStreamingFeature()
-            self.deviceTimeSetupFeature = DeviceTimeSetupFeature()
-            self.sdkModeFeature = SdkModeFeature()
-            self.h10RecordingFeature = H10RecordingFeature()
-            self.deviceInfoFeature = DeviceInfoFeature()
-            self.batteryStatusFeature = BatteryStatusFeature()
-            self.ledAnimationFeature = LedAnimationFeature()
+            self.deviceConnectionState[polarDeviceInfo.deviceId] = DeviceConnectionState.disconnected(polarDeviceInfo.deviceId)
         }
-        notifyListeners("disconnected", data: [:])
+        var data = JSObject()
+        data["deviceId"] = polarDeviceInfo.deviceId
+        data["address"] = polarDeviceInfo.address.uuidString
+        data["rssi"] = polarDeviceInfo.rssi
+        data["name"] = polarDeviceInfo.name
+        data["isConnectable"] = polarDeviceInfo.connectable
+        notifyListeners("deviceDisconnected", data: data)
     }
 }
 
-// MARK: - PolarBleApiDeviceInfoObserver
 extension PolarSdk : PolarBleApiDeviceInfoObserver {
-    func disInformationReceivedWithKeysAsStrings(_ identifier: String, key: String, value: String) {
-      //do nothing
+    public func disInformationReceivedWithKeysAsStrings(_ identifier: String, key: String, value: String) {
+        var data = JSObject()
+        data["identifier"] = identifier
+        data["uuid"] = key
+        data["value"] = value
+        notifyListeners("disInformationReceived", data: data)
     }
     
-    func batteryLevelReceived(_ identifier: String, batteryLevel: UInt) {
+    public func batteryLevelReceived(_ identifier: String, batteryLevel: UInt) {
         NSLog("battery level updated: \(batteryLevel)")
-        Task { @MainActor in
-            self.batteryStatusFeature.batteryLevel = batteryLevel
-        }
+        var data = JSObject()
+        data["identifier"] = identifier
+        data["level"] = batteryLevel
+        notifyListeners("batteryLevelReceived", data: data)
     }
     
-    func disInformationReceived(_ identifier: String, uuid: CBUUID, value: String) {
+    public func disInformationReceived(_ identifier: String, uuid: CBUUID, value: String) {
         NSLog("dis info: \(uuid.uuidString) value: \(value)")
-        if(uuid == BleDisClient.SOFTWARE_REVISION_STRING) {
-            Task { @MainActor in
-                self.deviceInfoFeature.firmwareVersion = value
-            }
-        }
+        var data = JSObject()
+        data["identifier"] = identifier
+        data["uuid"] = uuid.uuidString
+        data["value"] = value
+        notifyListeners("disInformationReceived", data: data)
     }
 }
 
-// MARK: - PolarBleApiDeviceFeaturesObserver
 extension PolarSdk : PolarBleApiDeviceFeaturesObserver {
-    func bleSdkFeatureReady(_ identifier: String, feature: PolarBleSdk.PolarBleSdkFeature) {
+    public func bleSdkFeatureReady(_ identifier: String, feature: PolarBleSdk.PolarBleSdkFeature) {
         NSLog("Feature is ready: \(feature)")
-        switch(feature) {
-            
-        case .feature_hr:
-            //nop
-            break
-            
-        case .feature_battery_info:
-            Task { @MainActor in
-                self.batteryStatusFeature.isSupported = true
-            }
-            break
-            
-        case .feature_device_info:
-            Task { @MainActor in
-                self.deviceInfoFeature.isSupported = true
-            }
-            break
-            
-        case .feature_polar_h10_exercise_recording:
-            Task { @MainActor in
-                self.h10RecordingFeature.isSupported = true
-            }
-            break
-            
-        case .feature_polar_device_time_setup:
-            Task { @MainActor in
-                self.deviceTimeSetupFeature.isSupported = true
-            }
-            
-            Task {
-                //getH10RecordingStatus()
-            }
-            
-            break
-            
-        case  .feature_polar_sdk_mode:
-            Task { @MainActor in
-                self.sdkModeFeature.isSupported = true
-            }
-            Task {
-                //await getSdkModeStatus()
-            }
-            break
-            
-        case .feature_polar_online_streaming:
-            Task { @MainActor in
-                self.onlineStreamingFeature.isSupported = true
-            }
-            
-            api.getAvailableOnlineStreamDataTypes(identifier)
-                .observe(on: MainScheduler.instance)
-                .subscribe{ e in
-                    switch e {
-                    case .success(let availableOnlineDataTypes):
-                        for dataType in availableOnlineDataTypes {
-                            self.onlineStreamingFeature.availableOnlineDataTypes[dataType] = true
-                        }
-                    case .failure(let err):
-                        self.somethingFailed(text: "Failed to get available online streaming data types: \(err)")
-                    }
-                }.disposed(by: disposeBag)
-            break
-            
-        case .feature_polar_offline_recording:
-            Task { @MainActor in
-                self.offlineRecordingFeature.isSupported = true
-            }
-            Task {
-                //await getOfflineRecordingStatus()
-            }
-            break
-    
-        case .feature_polar_led_animation:
-            Task { @MainActor in
-                self.ledAnimationFeature.isSupported = true
-            }
-            Task {
-                //await getSdkModeStatus()
-            }
-            break
-        case .feature_polar_firmware_update: break
-          //do nothing
-        case .feature_polar_activity_data: break
-          //do nothing
-        }
+        var data = JSObject()
+        data["identifier"] = identifier
+        data["feature"] = PolarBleSdkFeature.allCases.firstIndex(of: feature)!
+        notifyListeners("sdkFeatureReady", data: data)
     }
     
-    // deprecated
-    func hrFeatureReady(_ identifier: String) {
+    public func hrFeatureReady(_ identifier: String) {
         NSLog("HR ready")
     }
     
-    // deprecated
-    func ftpFeatureReady(_ identifier: String) {
+    public func ftpFeatureReady(_ identifier: String) {
         NSLog("FTP ready")
     }
     
-    // deprecated
-    func streamingFeaturesReady(_ identifier: String, streamingFeatures: Set<PolarDeviceDataType>) {
+    public func streamingFeaturesReady(_ identifier: String, streamingFeatures: Set<PolarDeviceDataType>) {
         for feature in streamingFeatures {
             NSLog("Feature \(feature) is ready.")
         }
     }
 }
 
-// MARK: - PolarBleApiLogger
 extension PolarSdk : PolarBleApiLogger {
-    func message(_ str: String) {
+    public func message(_ str: String) {
         NSLog("Polar SDK log:  \(str)")
     }
 }

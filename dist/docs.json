@@ -6,88 +6,844 @@
     "tags": [],
     "methods": [
       {
-        "name": "connectPolar",
-        "signature": "() => Promise<{ value: boolean; message?: string; }>",
+        "name": "initialize",
+        "signature": "() => Promise<void>",
         "parameters": [],
-        "returns": "Promise<{ value: boolean; message?: string | undefined; }>",
+        "returns": "Promise<void>",
         "tags": [],
         "docs": "",
         "complexTypes": [],
-        "slug": "connectpolar"
+        "slug": "initialize"
       },
       {
-        "name": "streamHR",
+        "name": "connectToDevice",
+        "signature": "(options: { identifier: string; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "connecttodevice"
+      },
+      {
+        "name": "disconnectFromDevice",
+        "signature": "(options: { identifier: string; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "disconnectfromdevice"
+      },
+      {
+        "name": "searchForDevice",
         "signature": "() => Promise<{ value: boolean; }>",
         "parameters": [],
         "returns": "Promise<{ value: boolean; }>",
         "tags": [],
         "docs": "",
         "complexTypes": [],
-        "slug": "streamhr"
+        "slug": "searchfordevice"
       },
       {
-        "name": "streamEcg",
-        "signature": "() => Promise<{ value: boolean; }>",
-        "parameters": [],
+        "name": "getAvailableOnlineStreamDataTypes",
+        "signature": "(options: { identifier: string; }) => Promise<{ types: PolarDataType[]; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<{ types: PolarDataType[]; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarDataType"
+        ],
+        "slug": "getavailableonlinestreamdatatypes"
+      },
+      {
+        "name": "requestStreamSettings",
+        "signature": "(options: { identifier: string; feature: PolarDataType; }) => Promise<PolarSensorSetting>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; feature: PolarDataType; }"
+          }
+        ],
+        "returns": "Promise<PolarSensorSetting>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarSensorSetting",
+          "PolarDataType"
+        ],
+        "slug": "requeststreamsettings"
+      },
+      {
+        "name": "startHrStreaming",
+        "signature": "(options: { identifier: string; }) => Promise<{ value: boolean; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
         "returns": "Promise<{ value: boolean; }>",
         "tags": [],
         "docs": "",
         "complexTypes": [],
-        "slug": "streamecg"
+        "slug": "starthrstreaming"
       },
       {
-        "name": "streamAcc",
-        "signature": "() => Promise<{ value: boolean; }>",
-        "parameters": [],
+        "name": "startEcgStreaming",
+        "signature": "(options: { identifier: string; settings?: PolarSensorSetting; }) => Promise<{ value: boolean; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; settings?: PolarSensorSetting | undefined; }"
+          }
+        ],
+        "returns": "Promise<{ value: boolean; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarSensorSetting"
+        ],
+        "slug": "startecgstreaming"
+      },
+      {
+        "name": "startAccStreaming",
+        "signature": "(options: { identifier: string; settings?: PolarSensorSetting; }) => Promise<{ value: boolean; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; settings?: PolarSensorSetting | undefined; }"
+          }
+        ],
+        "returns": "Promise<{ value: boolean; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarSensorSetting"
+        ],
+        "slug": "startaccstreaming"
+      },
+      {
+        "name": "startGyroStreaming",
+        "signature": "(options: { identifier: string; settings?: PolarSensorSetting; }) => Promise<{ value: boolean; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; settings?: PolarSensorSetting | undefined; }"
+          }
+        ],
+        "returns": "Promise<{ value: boolean; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarSensorSetting"
+        ],
+        "slug": "startgyrostreaming"
+      },
+      {
+        "name": "startMagnetometerStreaming",
+        "signature": "(options: { identifier: string; settings?: PolarSensorSetting; }) => Promise<{ value: boolean; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; settings?: PolarSensorSetting | undefined; }"
+          }
+        ],
+        "returns": "Promise<{ value: boolean; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarSensorSetting"
+        ],
+        "slug": "startmagnetometerstreaming"
+      },
+      {
+        "name": "startPpgStreaming",
+        "signature": "(options: { identifier: string; settings?: PolarSensorSetting; }) => Promise<{ value: boolean; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; settings?: PolarSensorSetting | undefined; }"
+          }
+        ],
+        "returns": "Promise<{ value: boolean; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarSensorSetting"
+        ],
+        "slug": "startppgstreaming"
+      },
+      {
+        "name": "startPpiStreaming",
+        "signature": "(options: { identifier: string; }) => Promise<{ value: boolean; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
         "returns": "Promise<{ value: boolean; }>",
         "tags": [],
         "docs": "",
         "complexTypes": [],
-        "slug": "streamacc"
+        "slug": "startppistreaming"
       },
       {
-        "name": "stopHR",
-        "signature": "() => Promise<{ value: boolean; }>",
-        "parameters": [],
+        "name": "startTemperatureStreaming",
+        "signature": "(options: { identifier: string; settings?: PolarSensorSetting; }) => Promise<{ value: boolean; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; settings?: PolarSensorSetting | undefined; }"
+          }
+        ],
         "returns": "Promise<{ value: boolean; }>",
         "tags": [],
         "docs": "",
-        "complexTypes": [],
-        "slug": "stophr"
+        "complexTypes": [
+          "PolarSensorSetting"
+        ],
+        "slug": "starttemperaturestreaming"
       },
       {
-        "name": "stopEcg",
-        "signature": "() => Promise<{ value: boolean; }>",
-        "parameters": [],
+        "name": "startPressureStreaming",
+        "signature": "(options: { identifier: string; settings?: PolarSensorSetting; }) => Promise<{ value: boolean; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; settings?: PolarSensorSetting | undefined; }"
+          }
+        ],
         "returns": "Promise<{ value: boolean; }>",
         "tags": [],
         "docs": "",
-        "complexTypes": [],
-        "slug": "stopecg"
+        "complexTypes": [
+          "PolarSensorSetting"
+        ],
+        "slug": "startpressurestreaming"
       },
       {
-        "name": "stopAcc",
-        "signature": "() => Promise<{ value: boolean; }>",
-        "parameters": [],
+        "name": "stopStreaming",
+        "signature": "(options: { identifier: string; feature: PolarDataType; }) => Promise<{ value: boolean; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; feature: PolarDataType; }"
+          }
+        ],
         "returns": "Promise<{ value: boolean; }>",
         "tags": [],
         "docs": "",
-        "complexTypes": [],
-        "slug": "stopacc"
+        "complexTypes": [
+          "PolarDataType"
+        ],
+        "slug": "stopstreaming"
       },
       {
-        "name": "disconnectPolar",
-        "signature": "() => Promise<{ value: boolean; }>",
-        "parameters": [],
-        "returns": "Promise<{ value: boolean; }>",
+        "name": "startRecording",
+        "signature": "(options: { identifier: string; exerciseId: string; interval: RecordingInterval; sampleType: SampleType; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; exerciseId: string; interval: RecordingInterval; sampleType: SampleType; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "RecordingInterval",
+          "SampleType"
+        ],
+        "slug": "startrecording"
+      },
+      {
+        "name": "stopRecording",
+        "signature": "(options: { identifier: string; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<void>",
         "tags": [],
         "docs": "",
         "complexTypes": [],
-        "slug": "disconnectpolar"
+        "slug": "stoprecording"
+      },
+      {
+        "name": "requestRecordingStatus",
+        "signature": "(options: { identifier: string; }) => Promise<{ ongoing: boolean; entryId: string; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<{ ongoing: boolean; entryId: string; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "requestrecordingstatus"
+      },
+      {
+        "name": "listExercises",
+        "signature": "(options: { identifier: string; }) => Promise<{ entries: PolarExerciseEntry[]; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<{ entries: PolarExerciseEntry[]; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarExerciseEntry"
+        ],
+        "slug": "listexercises"
+      },
+      {
+        "name": "fetchExercise",
+        "signature": "(options: { identifier: string; entry: PolarExerciseEntry; }) => Promise<PolarExerciseData>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; entry: PolarExerciseEntry; }"
+          }
+        ],
+        "returns": "Promise<PolarExerciseData>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarExerciseData",
+          "PolarExerciseEntry"
+        ],
+        "slug": "fetchexercise"
+      },
+      {
+        "name": "removeExercise",
+        "signature": "(options: { identifier: string; entry: PolarExerciseEntry; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; entry: PolarExerciseEntry; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarExerciseEntry"
+        ],
+        "slug": "removeexercise"
+      },
+      {
+        "name": "setLedConfig",
+        "signature": "(options: { identifier: string; config: LedConfig; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; config: LedConfig; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "LedConfig"
+        ],
+        "slug": "setledconfig"
+      },
+      {
+        "name": "doFactoryReset",
+        "signature": "(options: { identifier: string; preservePairingInformation: boolean; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; preservePairingInformation: boolean; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "dofactoryreset"
+      },
+      {
+        "name": "enableSdkMode",
+        "signature": "(options: { identifier: string; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "enablesdkmode"
+      },
+      {
+        "name": "disableSdkMode",
+        "signature": "(options: { identifier: string; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "disablesdkmode"
+      },
+      {
+        "name": "isSdkModeEnabled",
+        "signature": "(options: { identifier: string; }) => Promise<{ enabled: boolean; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<{ enabled: boolean; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "issdkmodeenabled"
+      },
+      {
+        "name": "getAvailableOfflineRecordingDataTypes",
+        "signature": "(options: { identifier: string; }) => Promise<{ types: PolarDataType[]; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<{ types: PolarDataType[]; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarDataType"
+        ],
+        "slug": "getavailableofflinerecordingdatatypes"
+      },
+      {
+        "name": "requestOfflineRecordingSettings",
+        "signature": "(options: { identifier: string; feature: PolarDataType; }) => Promise<PolarSensorSetting | null>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; feature: PolarDataType; }"
+          }
+        ],
+        "returns": "Promise<PolarSensorSetting | null>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarSensorSetting",
+          "PolarDataType"
+        ],
+        "slug": "requestofflinerecordingsettings"
+      },
+      {
+        "name": "startOfflineRecording",
+        "signature": "(options: { identifier: string; feature: PolarDataType; settings?: PolarSensorSetting; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; feature: PolarDataType; settings?: PolarSensorSetting | undefined; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarDataType",
+          "PolarSensorSetting"
+        ],
+        "slug": "startofflinerecording"
+      },
+      {
+        "name": "stopOfflineRecording",
+        "signature": "(options: { identifier: string; feature: PolarDataType; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; feature: PolarDataType; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarDataType"
+        ],
+        "slug": "stopofflinerecording"
+      },
+      {
+        "name": "getOfflineRecordingStatus",
+        "signature": "(options: { identifier: string; }) => Promise<{ features: PolarDataType[]; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<{ features: PolarDataType[]; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarDataType"
+        ],
+        "slug": "getofflinerecordingstatus"
+      },
+      {
+        "name": "listOfflineRecordings",
+        "signature": "(options: { identifier: string; }) => Promise<{ entries: PolarOfflineRecordingEntry[]; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<{ entries: PolarOfflineRecordingEntry[]; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarOfflineRecordingEntry"
+        ],
+        "slug": "listofflinerecordings"
+      },
+      {
+        "name": "getOfflineRecord",
+        "signature": "(options: { identifier: string; entry: PolarOfflineRecordingEntry; }) => Promise<PolarOfflineRecordingData>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; entry: PolarOfflineRecordingEntry; }"
+          }
+        ],
+        "returns": "Promise<PolarOfflineRecordingData>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarOfflineRecordingData",
+          "PolarOfflineRecordingEntry"
+        ],
+        "slug": "getofflinerecord"
+      },
+      {
+        "name": "removeOfflineRecord",
+        "signature": "(options: { identifier: string; entry: PolarOfflineRecordingEntry; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; entry: PolarOfflineRecordingEntry; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarOfflineRecordingEntry"
+        ],
+        "slug": "removeofflinerecord"
+      },
+      {
+        "name": "getDiskSpace",
+        "signature": "(options: { identifier: string; }) => Promise<{ freeSpace: number; totalSpace: number; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<{ freeSpace: number; totalSpace: number; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "getdiskspace"
+      },
+      {
+        "name": "getLocalTime",
+        "signature": "(options: { identifier: string; }) => Promise<{ time: string; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<{ time: string; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "getlocaltime"
+      },
+      {
+        "name": "setLocalTime",
+        "signature": "(options: { identifier: string; time: Date; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; time: Date; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "Date"
+        ],
+        "slug": "setlocaltime"
+      },
+      {
+        "name": "doFirstTimeUse",
+        "signature": "(options: { identifier: string; config: PolarFirstTimeUseConfig; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; config: PolarFirstTimeUseConfig; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarFirstTimeUseConfig"
+        ],
+        "slug": "dofirsttimeuse"
+      },
+      {
+        "name": "getConnectionStatus",
+        "signature": "(options: { identifier: string; }) => Promise<{ connected: boolean; gattConnected: boolean; deviceName: string; services: string[]; browserPaired: boolean; details: string; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<{ connected: boolean; gattConnected: boolean; deviceName: string; services: string[]; browserPaired: boolean; details: string; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "getconnectionstatus"
+      },
+      {
+        "name": "isFtuDone",
+        "signature": "(options: { identifier: string; }) => Promise<{ done: boolean; message?: string; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<{ done: boolean; message?: string | undefined; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "isftudone"
+      },
+      {
+        "name": "deleteStoredDeviceData",
+        "signature": "(options: { identifier: string; dataType: number; until: string; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; dataType: number; until: string; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "deletestoreddevicedata"
+      },
+      {
+        "name": "deleteDeviceDateFolders",
+        "signature": "(options: { identifier: string; fromDate: string; toDate: string; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; fromDate: string; toDate: string; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "deletedevicedatefolders"
+      },
+      {
+        "name": "getSteps",
+        "signature": "(options: { identifier: string; fromDate: string; toDate: string; }) => Promise<{ data: PolarStepsData[]; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; fromDate: string; toDate: string; }"
+          }
+        ],
+        "returns": "Promise<{ data: PolarStepsData[]; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarStepsData"
+        ],
+        "slug": "getsteps"
+      },
+      {
+        "name": "getDistance",
+        "signature": "(options: { identifier: string; fromDate: string; toDate: string; }) => Promise<{ data: PolarDistanceData[]; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; fromDate: string; toDate: string; }"
+          }
+        ],
+        "returns": "Promise<{ data: PolarDistanceData[]; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarDistanceData"
+        ],
+        "slug": "getdistance"
+      },
+      {
+        "name": "getActiveTime",
+        "signature": "(options: { identifier: string; fromDate: string; toDate: string; }) => Promise<{ data: PolarActiveTimeData[]; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; fromDate: string; toDate: string; }"
+          }
+        ],
+        "returns": "Promise<{ data: PolarActiveTimeData[]; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarActiveTimeData"
+        ],
+        "slug": "getactivetime"
+      },
+      {
+        "name": "getActivitySampleData",
+        "signature": "(options: { identifier: string; fromDate: string; toDate: string; }) => Promise<{ data: PolarActivitySampleData[]; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; fromDate: string; toDate: string; }"
+          }
+        ],
+        "returns": "Promise<{ data: PolarActivitySampleData[]; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PolarActivitySampleData"
+        ],
+        "slug": "getactivitysampledata"
+      },
+      {
+        "name": "sendInitializationAndStartSyncNotifications",
+        "signature": "(options: { identifier: string; }) => Promise<{ success: boolean; }>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<{ success: boolean; }>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "sendinitializationandstartsyncnotifications"
+      },
+      {
+        "name": "sendTerminateAndStopSyncNotifications",
+        "signature": "(options: { identifier: string; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ identifier: string; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "sendterminateandstopsyncnotifications"
       },
       {
         "name": "addListener",
-        "signature": "(eventName: 'hrData', data: any) => Promise<PluginListenerHandle>",
+        "signature": "(eventName: 'hrData', listenerFunc: (data: any) => void) => Promise<PluginListenerHandle>",
         "parameters": [
           {
             "name": "eventName",
@@ -95,9 +851,9 @@
             "type": "'hrData'"
           },
           {
-            "name": "data",
+            "name": "listenerFunc",
             "docs": "",
-            "type": "any"
+            "type": "(data: any) => void"
           }
         ],
         "returns": "Promise<PluginListenerHandle>",
@@ -110,7 +866,7 @@
       },
       {
         "name": "addListener",
-        "signature": "(eventName: 'ecgData', data: any) => Promise<PluginListenerHandle>",
+        "signature": "(eventName: 'ecgData', listenerFunc: (data: any) => void) => Promise<PluginListenerHandle>",
         "parameters": [
           {
             "name": "eventName",
@@ -118,9 +874,9 @@
             "type": "'ecgData'"
           },
           {
-            "name": "data",
+            "name": "listenerFunc",
             "docs": "",
-            "type": "any"
+            "type": "(data: any) => void"
           }
         ],
         "returns": "Promise<PluginListenerHandle>",
@@ -133,7 +889,7 @@
       },
       {
         "name": "addListener",
-        "signature": "(eventName: 'accData', data: any) => Promise<PluginListenerHandle>",
+        "signature": "(eventName: 'accData', listenerFunc: (data: any) => void) => Promise<PluginListenerHandle>",
         "parameters": [
           {
             "name": "eventName",
@@ -141,9 +897,9 @@
             "type": "'accData'"
           },
           {
-            "name": "data",
+            "name": "listenerFunc",
             "docs": "",
-            "type": "any"
+            "type": "(data: any) => void"
           }
         ],
         "returns": "Promise<PluginListenerHandle>",
@@ -156,17 +912,17 @@
       },
       {
         "name": "addListener",
-        "signature": "(eventName: 'disconnected', data: any) => Promise<PluginListenerHandle>",
+        "signature": "(eventName: 'gyroData', listenerFunc: (data: any) => void) => Promise<PluginListenerHandle>",
         "parameters": [
           {
             "name": "eventName",
             "docs": "",
-            "type": "'disconnected'"
+            "type": "'gyroData'"
           },
           {
-            "name": "data",
+            "name": "listenerFunc",
             "docs": "",
-            "type": "any"
+            "type": "(data: any) => void"
           }
         ],
         "returns": "Promise<PluginListenerHandle>",
@@ -175,7 +931,310 @@
         "complexTypes": [
           "PluginListenerHandle"
         ],
-        "slug": "addlistenerdisconnected-"
+        "slug": "addlistenergyrodata-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'magnetometerData', listenerFunc: (data: any) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'magnetometerData'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: any) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenermagnetometerdata-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'ppgData', listenerFunc: (data: any) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'ppgData'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: any) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenerppgdata-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'ppiData', listenerFunc: (data: any) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'ppiData'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: any) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenerppidata-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'temperatureData', listenerFunc: (data: any) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'temperatureData'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: any) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenertemperaturedata-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'pressureData', listenerFunc: (data: any) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'pressureData'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: any) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenerpressuredata-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'deviceConnected', listenerFunc: (data: PolarDeviceInfo) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'deviceConnected'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: PolarDeviceInfo) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle",
+          "PolarDeviceInfo"
+        ],
+        "slug": "addlistenerdeviceconnected-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'deviceConnecting', listenerFunc: (data: PolarDeviceInfo) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'deviceConnecting'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: PolarDeviceInfo) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle",
+          "PolarDeviceInfo"
+        ],
+        "slug": "addlistenerdeviceconnecting-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'deviceDisconnected', listenerFunc: (data: PolarDeviceInfo) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'deviceDisconnected'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: PolarDeviceInfo) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle",
+          "PolarDeviceInfo"
+        ],
+        "slug": "addlistenerdevicedisconnected-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'deviceFound', listenerFunc: (data: PolarDeviceInfo) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'deviceFound'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: PolarDeviceInfo) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle",
+          "PolarDeviceInfo"
+        ],
+        "slug": "addlistenerdevicefound-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'blePowerStateChanged', listenerFunc: (data: { enabled: boolean; }) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'blePowerStateChanged'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: { enabled: boolean; }) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenerblepowerstatechanged-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'batteryLevelReceived', listenerFunc: (data: { identifier: string; level: number; }) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'batteryLevelReceived'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: { identifier: string; level: number; }) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenerbatterylevelreceived-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'disInformationReceived', listenerFunc: (data: { identifier: string; uuid: string; value: string; }) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'disInformationReceived'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: { identifier: string; uuid: string; value: string; }) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenerdisinformationreceived-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'sdkFeatureReady', listenerFunc: (data: { identifier: string; feature: number; }) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'sdkFeatureReady'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: { identifier: string; feature: number; }) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenersdkfeatureready-"
       },
       {
         "name": "removeAllListeners",
@@ -192,6 +1251,1103 @@
   },
   "interfaces": [
     {
+      "name": "PolarSensorSetting",
+      "slug": "polarsensorsetting",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "settings",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "{ [key: string]: number[]; }"
+        }
+      ]
+    },
+    {
+      "name": "PolarExerciseEntry",
+      "slug": "polarexerciseentry",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "path",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "date",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "entryId",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "PolarExerciseData",
+      "slug": "polarexercisedata",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "interval",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        },
+        {
+          "name": "samples",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number[]"
+        }
+      ]
+    },
+    {
+      "name": "LedConfig",
+      "slug": "ledconfig",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "ledEnabled",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "name": "PolarOfflineRecordingEntry",
+      "slug": "polarofflinerecordingentry",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "path",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "size",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        },
+        {
+          "name": "date",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "PolarOfflineRecordingData",
+      "slug": "polarofflinerecordingdata",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "startTime",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "settings",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [
+            "PolarSensorSetting"
+          ],
+          "type": "PolarSensorSetting"
+        }
+      ]
+    },
+    {
+      "name": "Date",
+      "slug": "date",
+      "docs": "Enables basic storage and retrieval of dates and times.",
+      "tags": [],
+      "methods": [
+        {
+          "name": "toString",
+          "signature": "() => string",
+          "parameters": [],
+          "returns": "string",
+          "tags": [],
+          "docs": "Returns a string representation of a date. The format of the string depends on the locale.",
+          "complexTypes": [],
+          "slug": "tostring"
+        },
+        {
+          "name": "toDateString",
+          "signature": "() => string",
+          "parameters": [],
+          "returns": "string",
+          "tags": [],
+          "docs": "Returns a date as a string value.",
+          "complexTypes": [],
+          "slug": "todatestring"
+        },
+        {
+          "name": "toTimeString",
+          "signature": "() => string",
+          "parameters": [],
+          "returns": "string",
+          "tags": [],
+          "docs": "Returns a time as a string value.",
+          "complexTypes": [],
+          "slug": "totimestring"
+        },
+        {
+          "name": "toLocaleString",
+          "signature": "() => string",
+          "parameters": [],
+          "returns": "string",
+          "tags": [],
+          "docs": "Returns a value as a string value appropriate to the host environment's current locale.",
+          "complexTypes": [],
+          "slug": "tolocalestring"
+        },
+        {
+          "name": "toLocaleDateString",
+          "signature": "() => string",
+          "parameters": [],
+          "returns": "string",
+          "tags": [],
+          "docs": "Returns a date as a string value appropriate to the host environment's current locale.",
+          "complexTypes": [],
+          "slug": "tolocaledatestring"
+        },
+        {
+          "name": "toLocaleTimeString",
+          "signature": "() => string",
+          "parameters": [],
+          "returns": "string",
+          "tags": [],
+          "docs": "Returns a time as a string value appropriate to the host environment's current locale.",
+          "complexTypes": [],
+          "slug": "tolocaletimestring"
+        },
+        {
+          "name": "valueOf",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Returns the stored time value in milliseconds since midnight, January 1, 1970 UTC.",
+          "complexTypes": [],
+          "slug": "valueof"
+        },
+        {
+          "name": "getTime",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the time value in milliseconds.",
+          "complexTypes": [],
+          "slug": "gettime"
+        },
+        {
+          "name": "getFullYear",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the year, using local time.",
+          "complexTypes": [],
+          "slug": "getfullyear"
+        },
+        {
+          "name": "getUTCFullYear",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the year using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "getutcfullyear"
+        },
+        {
+          "name": "getMonth",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the month, using local time.",
+          "complexTypes": [],
+          "slug": "getmonth"
+        },
+        {
+          "name": "getUTCMonth",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the month of a Date object using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "getutcmonth"
+        },
+        {
+          "name": "getDate",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the day-of-the-month, using local time.",
+          "complexTypes": [],
+          "slug": "getdate"
+        },
+        {
+          "name": "getUTCDate",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the day-of-the-month, using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "getutcdate"
+        },
+        {
+          "name": "getDay",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the day of the week, using local time.",
+          "complexTypes": [],
+          "slug": "getday"
+        },
+        {
+          "name": "getUTCDay",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the day of the week using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "getutcday"
+        },
+        {
+          "name": "getHours",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the hours in a date, using local time.",
+          "complexTypes": [],
+          "slug": "gethours"
+        },
+        {
+          "name": "getUTCHours",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the hours value in a Date object using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "getutchours"
+        },
+        {
+          "name": "getMinutes",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the minutes of a Date object, using local time.",
+          "complexTypes": [],
+          "slug": "getminutes"
+        },
+        {
+          "name": "getUTCMinutes",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the minutes of a Date object using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "getutcminutes"
+        },
+        {
+          "name": "getSeconds",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the seconds of a Date object, using local time.",
+          "complexTypes": [],
+          "slug": "getseconds"
+        },
+        {
+          "name": "getUTCSeconds",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the seconds of a Date object using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "getutcseconds"
+        },
+        {
+          "name": "getMilliseconds",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the milliseconds of a Date, using local time.",
+          "complexTypes": [],
+          "slug": "getmilliseconds"
+        },
+        {
+          "name": "getUTCMilliseconds",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the milliseconds of a Date object using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "getutcmilliseconds"
+        },
+        {
+          "name": "getTimezoneOffset",
+          "signature": "() => number",
+          "parameters": [],
+          "returns": "number",
+          "tags": [],
+          "docs": "Gets the difference in minutes between the time on the local computer and Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "gettimezoneoffset"
+        },
+        {
+          "name": "setTime",
+          "signature": "(time: number) => number",
+          "parameters": [
+            {
+              "name": "time",
+              "docs": "A numeric value representing the number of elapsed milliseconds since midnight, January 1, 1970 GMT.",
+              "type": "number"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "time A numeric value representing the number of elapsed milliseconds since midnight, January 1, 1970 GMT."
+            }
+          ],
+          "docs": "Sets the date and time value in the Date object.",
+          "complexTypes": [],
+          "slug": "settime"
+        },
+        {
+          "name": "setMilliseconds",
+          "signature": "(ms: number) => number",
+          "parameters": [
+            {
+              "name": "ms",
+              "docs": "A numeric value equal to the millisecond value.",
+              "type": "number"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "ms A numeric value equal to the millisecond value."
+            }
+          ],
+          "docs": "Sets the milliseconds value in the Date object using local time.",
+          "complexTypes": [],
+          "slug": "setmilliseconds"
+        },
+        {
+          "name": "setUTCMilliseconds",
+          "signature": "(ms: number) => number",
+          "parameters": [
+            {
+              "name": "ms",
+              "docs": "A numeric value equal to the millisecond value.",
+              "type": "number"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "ms A numeric value equal to the millisecond value."
+            }
+          ],
+          "docs": "Sets the milliseconds value in the Date object using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "setutcmilliseconds"
+        },
+        {
+          "name": "setSeconds",
+          "signature": "(sec: number, ms?: number | undefined) => number",
+          "parameters": [
+            {
+              "name": "sec",
+              "docs": "A numeric value equal to the seconds value.",
+              "type": "number"
+            },
+            {
+              "name": "ms",
+              "docs": "A numeric value equal to the milliseconds value.",
+              "type": "number | undefined"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "sec A numeric value equal to the seconds value."
+            },
+            {
+              "name": "param",
+              "text": "ms A numeric value equal to the milliseconds value."
+            }
+          ],
+          "docs": "Sets the seconds value in the Date object using local time.",
+          "complexTypes": [],
+          "slug": "setseconds"
+        },
+        {
+          "name": "setUTCSeconds",
+          "signature": "(sec: number, ms?: number | undefined) => number",
+          "parameters": [
+            {
+              "name": "sec",
+              "docs": "A numeric value equal to the seconds value.",
+              "type": "number"
+            },
+            {
+              "name": "ms",
+              "docs": "A numeric value equal to the milliseconds value.",
+              "type": "number | undefined"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "sec A numeric value equal to the seconds value."
+            },
+            {
+              "name": "param",
+              "text": "ms A numeric value equal to the milliseconds value."
+            }
+          ],
+          "docs": "Sets the seconds value in the Date object using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "setutcseconds"
+        },
+        {
+          "name": "setMinutes",
+          "signature": "(min: number, sec?: number | undefined, ms?: number | undefined) => number",
+          "parameters": [
+            {
+              "name": "min",
+              "docs": "A numeric value equal to the minutes value.",
+              "type": "number"
+            },
+            {
+              "name": "sec",
+              "docs": "A numeric value equal to the seconds value.",
+              "type": "number | undefined"
+            },
+            {
+              "name": "ms",
+              "docs": "A numeric value equal to the milliseconds value.",
+              "type": "number | undefined"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "min A numeric value equal to the minutes value."
+            },
+            {
+              "name": "param",
+              "text": "sec A numeric value equal to the seconds value."
+            },
+            {
+              "name": "param",
+              "text": "ms A numeric value equal to the milliseconds value."
+            }
+          ],
+          "docs": "Sets the minutes value in the Date object using local time.",
+          "complexTypes": [],
+          "slug": "setminutes"
+        },
+        {
+          "name": "setUTCMinutes",
+          "signature": "(min: number, sec?: number | undefined, ms?: number | undefined) => number",
+          "parameters": [
+            {
+              "name": "min",
+              "docs": "A numeric value equal to the minutes value.",
+              "type": "number"
+            },
+            {
+              "name": "sec",
+              "docs": "A numeric value equal to the seconds value.",
+              "type": "number | undefined"
+            },
+            {
+              "name": "ms",
+              "docs": "A numeric value equal to the milliseconds value.",
+              "type": "number | undefined"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "min A numeric value equal to the minutes value."
+            },
+            {
+              "name": "param",
+              "text": "sec A numeric value equal to the seconds value."
+            },
+            {
+              "name": "param",
+              "text": "ms A numeric value equal to the milliseconds value."
+            }
+          ],
+          "docs": "Sets the minutes value in the Date object using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "setutcminutes"
+        },
+        {
+          "name": "setHours",
+          "signature": "(hours: number, min?: number | undefined, sec?: number | undefined, ms?: number | undefined) => number",
+          "parameters": [
+            {
+              "name": "hours",
+              "docs": "A numeric value equal to the hours value.",
+              "type": "number"
+            },
+            {
+              "name": "min",
+              "docs": "A numeric value equal to the minutes value.",
+              "type": "number | undefined"
+            },
+            {
+              "name": "sec",
+              "docs": "A numeric value equal to the seconds value.",
+              "type": "number | undefined"
+            },
+            {
+              "name": "ms",
+              "docs": "A numeric value equal to the milliseconds value.",
+              "type": "number | undefined"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "hours A numeric value equal to the hours value."
+            },
+            {
+              "name": "param",
+              "text": "min A numeric value equal to the minutes value."
+            },
+            {
+              "name": "param",
+              "text": "sec A numeric value equal to the seconds value."
+            },
+            {
+              "name": "param",
+              "text": "ms A numeric value equal to the milliseconds value."
+            }
+          ],
+          "docs": "Sets the hour value in the Date object using local time.",
+          "complexTypes": [],
+          "slug": "sethours"
+        },
+        {
+          "name": "setUTCHours",
+          "signature": "(hours: number, min?: number | undefined, sec?: number | undefined, ms?: number | undefined) => number",
+          "parameters": [
+            {
+              "name": "hours",
+              "docs": "A numeric value equal to the hours value.",
+              "type": "number"
+            },
+            {
+              "name": "min",
+              "docs": "A numeric value equal to the minutes value.",
+              "type": "number | undefined"
+            },
+            {
+              "name": "sec",
+              "docs": "A numeric value equal to the seconds value.",
+              "type": "number | undefined"
+            },
+            {
+              "name": "ms",
+              "docs": "A numeric value equal to the milliseconds value.",
+              "type": "number | undefined"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "hours A numeric value equal to the hours value."
+            },
+            {
+              "name": "param",
+              "text": "min A numeric value equal to the minutes value."
+            },
+            {
+              "name": "param",
+              "text": "sec A numeric value equal to the seconds value."
+            },
+            {
+              "name": "param",
+              "text": "ms A numeric value equal to the milliseconds value."
+            }
+          ],
+          "docs": "Sets the hours value in the Date object using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "setutchours"
+        },
+        {
+          "name": "setDate",
+          "signature": "(date: number) => number",
+          "parameters": [
+            {
+              "name": "date",
+              "docs": "A numeric value equal to the day of the month.",
+              "type": "number"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "date A numeric value equal to the day of the month."
+            }
+          ],
+          "docs": "Sets the numeric day-of-the-month value of the Date object using local time.",
+          "complexTypes": [],
+          "slug": "setdate"
+        },
+        {
+          "name": "setUTCDate",
+          "signature": "(date: number) => number",
+          "parameters": [
+            {
+              "name": "date",
+              "docs": "A numeric value equal to the day of the month.",
+              "type": "number"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "date A numeric value equal to the day of the month."
+            }
+          ],
+          "docs": "Sets the numeric day of the month in the Date object using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "setutcdate"
+        },
+        {
+          "name": "setMonth",
+          "signature": "(month: number, date?: number | undefined) => number",
+          "parameters": [
+            {
+              "name": "month",
+              "docs": "A numeric value equal to the month. The value for January is 0, and other month values follow consecutively.",
+              "type": "number"
+            },
+            {
+              "name": "date",
+              "docs": "A numeric value representing the day of the month. If this value is not supplied, the value from a call to the getDate method is used.",
+              "type": "number | undefined"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "month A numeric value equal to the month. The value for January is 0, and other month values follow consecutively."
+            },
+            {
+              "name": "param",
+              "text": "date A numeric value representing the day of the month. If this value is not supplied, the value from a call to the getDate method is used."
+            }
+          ],
+          "docs": "Sets the month value in the Date object using local time.",
+          "complexTypes": [],
+          "slug": "setmonth"
+        },
+        {
+          "name": "setUTCMonth",
+          "signature": "(month: number, date?: number | undefined) => number",
+          "parameters": [
+            {
+              "name": "month",
+              "docs": "A numeric value equal to the month. The value for January is 0, and other month values follow consecutively.",
+              "type": "number"
+            },
+            {
+              "name": "date",
+              "docs": "A numeric value representing the day of the month. If it is not supplied, the value from a call to the getUTCDate method is used.",
+              "type": "number | undefined"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "month A numeric value equal to the month. The value for January is 0, and other month values follow consecutively."
+            },
+            {
+              "name": "param",
+              "text": "date A numeric value representing the day of the month. If it is not supplied, the value from a call to the getUTCDate method is used."
+            }
+          ],
+          "docs": "Sets the month value in the Date object using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "setutcmonth"
+        },
+        {
+          "name": "setFullYear",
+          "signature": "(year: number, month?: number | undefined, date?: number | undefined) => number",
+          "parameters": [
+            {
+              "name": "year",
+              "docs": "A numeric value for the year.",
+              "type": "number"
+            },
+            {
+              "name": "month",
+              "docs": "A zero-based numeric value for the month (0 for January, 11 for December). Must be specified if numDate is specified.",
+              "type": "number | undefined"
+            },
+            {
+              "name": "date",
+              "docs": "A numeric value equal for the day of the month.",
+              "type": "number | undefined"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "year A numeric value for the year."
+            },
+            {
+              "name": "param",
+              "text": "month A zero-based numeric value for the month (0 for January, 11 for December). Must be specified if numDate is specified."
+            },
+            {
+              "name": "param",
+              "text": "date A numeric value equal for the day of the month."
+            }
+          ],
+          "docs": "Sets the year of the Date object using local time.",
+          "complexTypes": [],
+          "slug": "setfullyear"
+        },
+        {
+          "name": "setUTCFullYear",
+          "signature": "(year: number, month?: number | undefined, date?: number | undefined) => number",
+          "parameters": [
+            {
+              "name": "year",
+              "docs": "A numeric value equal to the year.",
+              "type": "number"
+            },
+            {
+              "name": "month",
+              "docs": "A numeric value equal to the month. The value for January is 0, and other month values follow consecutively. Must be supplied if numDate is supplied.",
+              "type": "number | undefined"
+            },
+            {
+              "name": "date",
+              "docs": "A numeric value equal to the day of the month.",
+              "type": "number | undefined"
+            }
+          ],
+          "returns": "number",
+          "tags": [
+            {
+              "name": "param",
+              "text": "year A numeric value equal to the year."
+            },
+            {
+              "name": "param",
+              "text": "month A numeric value equal to the month. The value for January is 0, and other month values follow consecutively. Must be supplied if numDate is supplied."
+            },
+            {
+              "name": "param",
+              "text": "date A numeric value equal to the day of the month."
+            }
+          ],
+          "docs": "Sets the year value in the Date object using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "setutcfullyear"
+        },
+        {
+          "name": "toUTCString",
+          "signature": "() => string",
+          "parameters": [],
+          "returns": "string",
+          "tags": [],
+          "docs": "Returns a date converted to a string using Universal Coordinated Time (UTC).",
+          "complexTypes": [],
+          "slug": "toutcstring"
+        },
+        {
+          "name": "toISOString",
+          "signature": "() => string",
+          "parameters": [],
+          "returns": "string",
+          "tags": [],
+          "docs": "Returns a date as a string value in ISO format.",
+          "complexTypes": [],
+          "slug": "toisostring"
+        },
+        {
+          "name": "toJSON",
+          "signature": "(key?: any) => string",
+          "parameters": [
+            {
+              "name": "key",
+              "docs": "",
+              "type": "any"
+            }
+          ],
+          "returns": "string",
+          "tags": [],
+          "docs": "Used by the JSON.stringify method to enable the transformation of an object's data for JavaScript Object Notation (JSON) serialization.",
+          "complexTypes": [],
+          "slug": "tojson"
+        }
+      ],
+      "properties": []
+    },
+    {
+      "name": "PolarFirstTimeUseConfig",
+      "slug": "polarfirsttimeuseconfig",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "gender",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "birthDate",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "height",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        },
+        {
+          "name": "weight",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        },
+        {
+          "name": "maxHeartRate",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        },
+        {
+          "name": "vo2Max",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        },
+        {
+          "name": "restingHeartRate",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        },
+        {
+          "name": "trainingBackground",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        },
+        {
+          "name": "deviceTime",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "typicalDay",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        },
+        {
+          "name": "sleepGoalMinutes",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "PolarStepsData",
+      "slug": "polarstepsdata",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "date",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "steps",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "PolarDistanceData",
+      "slug": "polardistancedata",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "date",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "distance",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "PolarActiveTimeData",
+      "slug": "polaractivetimedata",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "date",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "activeTimeSeconds",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "PolarActivitySampleData",
+      "slug": "polaractivitysampledata",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "date",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "samplesDataList",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "any[]"
+        }
+      ]
+    },
+    {
       "name": "PluginListenerHandle",
       "slug": "pluginlistenerhandle",
       "docs": "",
@@ -206,9 +2362,150 @@
           "type": "() => Promise<void>"
         }
       ]
+    },
+    {
+      "name": "PolarDeviceInfo",
+      "slug": "polardeviceinfo",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "deviceId",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "address",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "rssi",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        },
+        {
+          "name": "name",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "isConnectable",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "boolean"
+        }
+      ]
     }
   ],
-  "enums": [],
+  "enums": [
+    {
+      "name": "PolarDataType",
+      "slug": "polardatatype",
+      "members": [
+        {
+          "name": "HR",
+          "value": "0",
+          "tags": [],
+          "docs": ""
+        },
+        {
+          "name": "ECG",
+          "value": "1",
+          "tags": [],
+          "docs": ""
+        },
+        {
+          "name": "ACC",
+          "value": "2",
+          "tags": [],
+          "docs": ""
+        },
+        {
+          "name": "PPG",
+          "value": "3",
+          "tags": [],
+          "docs": ""
+        },
+        {
+          "name": "PPI",
+          "value": "4",
+          "tags": [],
+          "docs": ""
+        },
+        {
+          "name": "GYRO",
+          "value": "5",
+          "tags": [],
+          "docs": ""
+        },
+        {
+          "name": "MAGNETOMETER",
+          "value": "6",
+          "tags": [],
+          "docs": ""
+        },
+        {
+          "name": "TEMPERATURE",
+          "value": "7",
+          "tags": [],
+          "docs": ""
+        },
+        {
+          "name": "PRESSURE",
+          "value": "8",
+          "tags": [],
+          "docs": ""
+        }
+      ]
+    },
+    {
+      "name": "RecordingInterval",
+      "slug": "recordinginterval",
+      "members": [
+        {
+          "name": "INTERVAL_1S",
+          "value": "0",
+          "tags": [],
+          "docs": ""
+        },
+        {
+          "name": "INTERVAL_5S",
+          "value": "1",
+          "tags": [],
+          "docs": ""
+        }
+      ]
+    },
+    {
+      "name": "SampleType",
+      "slug": "sampletype",
+      "members": [
+        {
+          "name": "HR",
+          "value": "0",
+          "tags": [],
+          "docs": ""
+        },
+        {
+          "name": "RR",
+          "value": "1",
+          "tags": [],
+          "docs": ""
+        }
+      ]
+    }
+  ],
   "typeAliases": [],
   "pluginConfigs": []
 }
