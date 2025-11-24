@@ -1,6 +1,6 @@
 # capacitor-polar-sdk
 
-Ionic Capacitor plugin to connect Polar H10 band to Ionic apps.
+Ionic Capacitor plugin to connect Polar 360 sensors.
 
 > **Note**: This is an independent fork with completely different functionality from the original project. This project is actively maintained and accepts contributions.
 
@@ -15,75 +15,75 @@ npx cap sync
 
 <docgen-index>
 
-* [`initialize()`](#initialize)
-* [`connectToDevice(...)`](#connecttodevice)
-* [`disconnectFromDevice(...)`](#disconnectfromdevice)
-* [`searchForDevice()`](#searchfordevice)
-* [`getAvailableOnlineStreamDataTypes(...)`](#getavailableonlinestreamdatatypes)
-* [`requestStreamSettings(...)`](#requeststreamsettings)
-* [`startHrStreaming(...)`](#starthrstreaming)
-* [`startEcgStreaming(...)`](#startecgstreaming)
-* [`startAccStreaming(...)`](#startaccstreaming)
-* [`startGyroStreaming(...)`](#startgyrostreaming)
-* [`startMagnetometerStreaming(...)`](#startmagnetometerstreaming)
-* [`startPpgStreaming(...)`](#startppgstreaming)
-* [`startPpiStreaming(...)`](#startppistreaming)
-* [`startTemperatureStreaming(...)`](#starttemperaturestreaming)
-* [`startPressureStreaming(...)`](#startpressurestreaming)
-* [`stopStreaming(...)`](#stopstreaming)
-* [`startRecording(...)`](#startrecording)
-* [`stopRecording(...)`](#stoprecording)
-* [`requestRecordingStatus(...)`](#requestrecordingstatus)
-* [`listExercises(...)`](#listexercises)
-* [`fetchExercise(...)`](#fetchexercise)
-* [`removeExercise(...)`](#removeexercise)
-* [`setLedConfig(...)`](#setledconfig)
-* [`doFactoryReset(...)`](#dofactoryreset)
-* [`enableSdkMode(...)`](#enablesdkmode)
-* [`disableSdkMode(...)`](#disablesdkmode)
-* [`isSdkModeEnabled(...)`](#issdkmodeenabled)
-* [`getAvailableOfflineRecordingDataTypes(...)`](#getavailableofflinerecordingdatatypes)
-* [`requestOfflineRecordingSettings(...)`](#requestofflinerecordingsettings)
-* [`startOfflineRecording(...)`](#startofflinerecording)
-* [`stopOfflineRecording(...)`](#stopofflinerecording)
-* [`getOfflineRecordingStatus(...)`](#getofflinerecordingstatus)
-* [`listOfflineRecordings(...)`](#listofflinerecordings)
-* [`getOfflineRecord(...)`](#getofflinerecord)
-* [`removeOfflineRecord(...)`](#removeofflinerecord)
-* [`getDiskSpace(...)`](#getdiskspace)
-* [`getLocalTime(...)`](#getlocaltime)
-* [`setLocalTime(...)`](#setlocaltime)
-* [`doFirstTimeUse(...)`](#dofirsttimeuse)
-* [`getConnectionStatus(...)`](#getconnectionstatus)
-* [`isFtuDone(...)`](#isftudone)
-* [`deleteStoredDeviceData(...)`](#deletestoreddevicedata)
-* [`deleteDeviceDateFolders(...)`](#deletedevicedatefolders)
-* [`getSteps(...)`](#getsteps)
-* [`getDistance(...)`](#getdistance)
-* [`getActiveTime(...)`](#getactivetime)
-* [`getActivitySampleData(...)`](#getactivitysampledata)
-* [`sendInitializationAndStartSyncNotifications(...)`](#sendinitializationandstartsyncnotifications)
-* [`sendTerminateAndStopSyncNotifications(...)`](#sendterminateandstopsyncnotifications)
-* [`addListener('hrData', ...)`](#addlistenerhrdata-)
-* [`addListener('ecgData', ...)`](#addlistenerecgdata-)
-* [`addListener('accData', ...)`](#addlisteneraccdata-)
-* [`addListener('gyroData', ...)`](#addlistenergyrodata-)
-* [`addListener('magnetometerData', ...)`](#addlistenermagnetometerdata-)
-* [`addListener('ppgData', ...)`](#addlistenerppgdata-)
-* [`addListener('ppiData', ...)`](#addlistenerppidata-)
-* [`addListener('temperatureData', ...)`](#addlistenertemperaturedata-)
-* [`addListener('pressureData', ...)`](#addlistenerpressuredata-)
-* [`addListener('deviceConnected', ...)`](#addlistenerdeviceconnected-)
-* [`addListener('deviceConnecting', ...)`](#addlistenerdeviceconnecting-)
-* [`addListener('deviceDisconnected', ...)`](#addlistenerdevicedisconnected-)
-* [`addListener('deviceFound', ...)`](#addlistenerdevicefound-)
-* [`addListener('blePowerStateChanged', ...)`](#addlistenerblepowerstatechanged-)
-* [`addListener('batteryLevelReceived', ...)`](#addlistenerbatterylevelreceived-)
-* [`addListener('disInformationReceived', ...)`](#addlistenerdisinformationreceived-)
-* [`addListener('sdkFeatureReady', ...)`](#addlistenersdkfeatureready-)
-* [`removeAllListeners()`](#removealllisteners)
-* [Interfaces](#interfaces)
-* [Enums](#enums)
+- [`initialize()`](#initialize)
+- [`connectToDevice(...)`](#connecttodevice)
+- [`disconnectFromDevice(...)`](#disconnectfromdevice)
+- [`searchForDevice()`](#searchfordevice)
+- [`getAvailableOnlineStreamDataTypes(...)`](#getavailableonlinestreamdatatypes)
+- [`requestStreamSettings(...)`](#requeststreamsettings)
+- [`startHrStreaming(...)`](#starthrstreaming)
+- [`startEcgStreaming(...)`](#startecgstreaming)
+- [`startAccStreaming(...)`](#startaccstreaming)
+- [`startGyroStreaming(...)`](#startgyrostreaming)
+- [`startMagnetometerStreaming(...)`](#startmagnetometerstreaming)
+- [`startPpgStreaming(...)`](#startppgstreaming)
+- [`startPpiStreaming(...)`](#startppistreaming)
+- [`startTemperatureStreaming(...)`](#starttemperaturestreaming)
+- [`startPressureStreaming(...)`](#startpressurestreaming)
+- [`stopStreaming(...)`](#stopstreaming)
+- [`startRecording(...)`](#startrecording)
+- [`stopRecording(...)`](#stoprecording)
+- [`requestRecordingStatus(...)`](#requestrecordingstatus)
+- [`listExercises(...)`](#listexercises)
+- [`fetchExercise(...)`](#fetchexercise)
+- [`removeExercise(...)`](#removeexercise)
+- [`setLedConfig(...)`](#setledconfig)
+- [`doFactoryReset(...)`](#dofactoryreset)
+- [`enableSdkMode(...)`](#enablesdkmode)
+- [`disableSdkMode(...)`](#disablesdkmode)
+- [`isSdkModeEnabled(...)`](#issdkmodeenabled)
+- [`getAvailableOfflineRecordingDataTypes(...)`](#getavailableofflinerecordingdatatypes)
+- [`requestOfflineRecordingSettings(...)`](#requestofflinerecordingsettings)
+- [`startOfflineRecording(...)`](#startofflinerecording)
+- [`stopOfflineRecording(...)`](#stopofflinerecording)
+- [`getOfflineRecordingStatus(...)`](#getofflinerecordingstatus)
+- [`listOfflineRecordings(...)`](#listofflinerecordings)
+- [`getOfflineRecord(...)`](#getofflinerecord)
+- [`removeOfflineRecord(...)`](#removeofflinerecord)
+- [`getDiskSpace(...)`](#getdiskspace)
+- [`getLocalTime(...)`](#getlocaltime)
+- [`setLocalTime(...)`](#setlocaltime)
+- [`doFirstTimeUse(...)`](#dofirsttimeuse)
+- [`getConnectionStatus(...)`](#getconnectionstatus)
+- [`isFtuDone(...)`](#isftudone)
+- [`deleteStoredDeviceData(...)`](#deletestoreddevicedata)
+- [`deleteDeviceDateFolders(...)`](#deletedevicedatefolders)
+- [`getSteps(...)`](#getsteps)
+- [`getDistance(...)`](#getdistance)
+- [`getActiveTime(...)`](#getactivetime)
+- [`getActivitySampleData(...)`](#getactivitysampledata)
+- [`sendInitializationAndStartSyncNotifications(...)`](#sendinitializationandstartsyncnotifications)
+- [`sendTerminateAndStopSyncNotifications(...)`](#sendterminateandstopsyncnotifications)
+- [`addListener('hrData', ...)`](#addlistenerhrdata-)
+- [`addListener('ecgData', ...)`](#addlistenerecgdata-)
+- [`addListener('accData', ...)`](#addlisteneraccdata-)
+- [`addListener('gyroData', ...)`](#addlistenergyrodata-)
+- [`addListener('magnetometerData', ...)`](#addlistenermagnetometerdata-)
+- [`addListener('ppgData', ...)`](#addlistenerppgdata-)
+- [`addListener('ppiData', ...)`](#addlistenerppidata-)
+- [`addListener('temperatureData', ...)`](#addlistenertemperaturedata-)
+- [`addListener('pressureData', ...)`](#addlistenerpressuredata-)
+- [`addListener('deviceConnected', ...)`](#addlistenerdeviceconnected-)
+- [`addListener('deviceConnecting', ...)`](#addlistenerdeviceconnecting-)
+- [`addListener('deviceDisconnected', ...)`](#addlistenerdevicedisconnected-)
+- [`addListener('deviceFound', ...)`](#addlistenerdevicefound-)
+- [`addListener('blePowerStateChanged', ...)`](#addlistenerblepowerstatechanged-)
+- [`addListener('batteryLevelReceived', ...)`](#addlistenerbatterylevelreceived-)
+- [`addListener('disInformationReceived', ...)`](#addlistenerdisinformationreceived-)
+- [`addListener('sdkFeatureReady', ...)`](#addlistenersdkfeatureready-)
+- [`removeAllListeners()`](#removealllisteners)
+- [Interfaces](#interfaces)
+- [Enums](#enums)
 
 </docgen-index>
 
@@ -96,8 +96,7 @@ npx cap sync
 initialize() => Promise<void>
 ```
 
---------------------
-
+---
 
 ### connectToDevice(...)
 
@@ -109,8 +108,7 @@ connectToDevice(options: { identifier: string; }) => Promise<void>
 | ------------- | ------------------------------------ |
 | **`options`** | <code>{ identifier: string; }</code> |
 
---------------------
-
+---
 
 ### disconnectFromDevice(...)
 
@@ -122,8 +120,7 @@ disconnectFromDevice(options: { identifier: string; }) => Promise<void>
 | ------------- | ------------------------------------ |
 | **`options`** | <code>{ identifier: string; }</code> |
 
---------------------
-
+---
 
 ### searchForDevice()
 
@@ -133,8 +130,7 @@ searchForDevice() => Promise<{ value: boolean; }>
 
 **Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
 
---------------------
-
+---
 
 ### getAvailableOnlineStreamDataTypes(...)
 
@@ -148,8 +144,7 @@ getAvailableOnlineStreamDataTypes(options: { identifier: string; }) => Promise<{
 
 **Returns:** <code>Promise&lt;{ types: PolarDataType[]; }&gt;</code>
 
---------------------
-
+---
 
 ### requestStreamSettings(...)
 
@@ -163,8 +158,7 @@ requestStreamSettings(options: { identifier: string; feature: PolarDataType; }) 
 
 **Returns:** <code>Promise&lt;<a href="#polarsensorsetting">PolarSensorSetting</a>&gt;</code>
 
---------------------
-
+---
 
 ### startHrStreaming(...)
 
@@ -178,8 +172,7 @@ startHrStreaming(options: { identifier: string; }) => Promise<{ value: boolean; 
 
 **Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
 
---------------------
-
+---
 
 ### startEcgStreaming(...)
 
@@ -193,8 +186,7 @@ startEcgStreaming(options: { identifier: string; settings?: PolarSensorSetting; 
 
 **Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
 
---------------------
-
+---
 
 ### startAccStreaming(...)
 
@@ -208,8 +200,7 @@ startAccStreaming(options: { identifier: string; settings?: PolarSensorSetting; 
 
 **Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
 
---------------------
-
+---
 
 ### startGyroStreaming(...)
 
@@ -223,8 +214,7 @@ startGyroStreaming(options: { identifier: string; settings?: PolarSensorSetting;
 
 **Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
 
---------------------
-
+---
 
 ### startMagnetometerStreaming(...)
 
@@ -238,8 +228,7 @@ startMagnetometerStreaming(options: { identifier: string; settings?: PolarSensor
 
 **Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
 
---------------------
-
+---
 
 ### startPpgStreaming(...)
 
@@ -253,8 +242,7 @@ startPpgStreaming(options: { identifier: string; settings?: PolarSensorSetting; 
 
 **Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
 
---------------------
-
+---
 
 ### startPpiStreaming(...)
 
@@ -268,8 +256,7 @@ startPpiStreaming(options: { identifier: string; }) => Promise<{ value: boolean;
 
 **Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
 
---------------------
-
+---
 
 ### startTemperatureStreaming(...)
 
@@ -283,8 +270,7 @@ startTemperatureStreaming(options: { identifier: string; settings?: PolarSensorS
 
 **Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
 
---------------------
-
+---
 
 ### startPressureStreaming(...)
 
@@ -298,8 +284,7 @@ startPressureStreaming(options: { identifier: string; settings?: PolarSensorSett
 
 **Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
 
---------------------
-
+---
 
 ### stopStreaming(...)
 
@@ -313,8 +298,7 @@ stopStreaming(options: { identifier: string; feature: PolarDataType; }) => Promi
 
 **Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
 
---------------------
-
+---
 
 ### startRecording(...)
 
@@ -326,8 +310,7 @@ startRecording(options: { identifier: string; exerciseId: string; interval: Reco
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **`options`** | <code>{ identifier: string; exerciseId: string; interval: <a href="#recordinginterval">RecordingInterval</a>; sampleType: <a href="#sampletype">SampleType</a>; }</code> |
 
---------------------
-
+---
 
 ### stopRecording(...)
 
@@ -339,8 +322,7 @@ stopRecording(options: { identifier: string; }) => Promise<void>
 | ------------- | ------------------------------------ |
 | **`options`** | <code>{ identifier: string; }</code> |
 
---------------------
-
+---
 
 ### requestRecordingStatus(...)
 
@@ -354,8 +336,7 @@ requestRecordingStatus(options: { identifier: string; }) => Promise<{ ongoing: b
 
 **Returns:** <code>Promise&lt;{ ongoing: boolean; entryId: string; }&gt;</code>
 
---------------------
-
+---
 
 ### listExercises(...)
 
@@ -369,8 +350,7 @@ listExercises(options: { identifier: string; }) => Promise<{ entries: PolarExerc
 
 **Returns:** <code>Promise&lt;{ entries: PolarExerciseEntry[]; }&gt;</code>
 
---------------------
-
+---
 
 ### fetchExercise(...)
 
@@ -384,8 +364,7 @@ fetchExercise(options: { identifier: string; entry: PolarExerciseEntry; }) => Pr
 
 **Returns:** <code>Promise&lt;<a href="#polarexercisedata">PolarExerciseData</a>&gt;</code>
 
---------------------
-
+---
 
 ### removeExercise(...)
 
@@ -397,8 +376,7 @@ removeExercise(options: { identifier: string; entry: PolarExerciseEntry; }) => P
 | ------------- | ------------------------------------------------------------------------------------------------- |
 | **`options`** | <code>{ identifier: string; entry: <a href="#polarexerciseentry">PolarExerciseEntry</a>; }</code> |
 
---------------------
-
+---
 
 ### setLedConfig(...)
 
@@ -410,8 +388,7 @@ setLedConfig(options: { identifier: string; config: LedConfig; }) => Promise<voi
 | ------------- | -------------------------------------------------------------------------------- |
 | **`options`** | <code>{ identifier: string; config: <a href="#ledconfig">LedConfig</a>; }</code> |
 
---------------------
-
+---
 
 ### doFactoryReset(...)
 
@@ -423,8 +400,7 @@ doFactoryReset(options: { identifier: string; preservePairingInformation: boolea
 | ------------- | ------------------------------------------------------------------------- |
 | **`options`** | <code>{ identifier: string; preservePairingInformation: boolean; }</code> |
 
---------------------
-
+---
 
 ### enableSdkMode(...)
 
@@ -436,8 +412,7 @@ enableSdkMode(options: { identifier: string; }) => Promise<void>
 | ------------- | ------------------------------------ |
 | **`options`** | <code>{ identifier: string; }</code> |
 
---------------------
-
+---
 
 ### disableSdkMode(...)
 
@@ -449,8 +424,7 @@ disableSdkMode(options: { identifier: string; }) => Promise<void>
 | ------------- | ------------------------------------ |
 | **`options`** | <code>{ identifier: string; }</code> |
 
---------------------
-
+---
 
 ### isSdkModeEnabled(...)
 
@@ -464,8 +438,7 @@ isSdkModeEnabled(options: { identifier: string; }) => Promise<{ enabled: boolean
 
 **Returns:** <code>Promise&lt;{ enabled: boolean; }&gt;</code>
 
---------------------
-
+---
 
 ### getAvailableOfflineRecordingDataTypes(...)
 
@@ -479,8 +452,7 @@ getAvailableOfflineRecordingDataTypes(options: { identifier: string; }) => Promi
 
 **Returns:** <code>Promise&lt;{ types: PolarDataType[]; }&gt;</code>
 
---------------------
-
+---
 
 ### requestOfflineRecordingSettings(...)
 
@@ -494,8 +466,7 @@ requestOfflineRecordingSettings(options: { identifier: string; feature: PolarDat
 
 **Returns:** <code>Promise&lt;<a href="#polarsensorsetting">PolarSensorSetting</a> | null&gt;</code>
 
---------------------
-
+---
 
 ### startOfflineRecording(...)
 
@@ -507,8 +478,7 @@ startOfflineRecording(options: { identifier: string; feature: PolarDataType; set
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`options`** | <code>{ identifier: string; feature: <a href="#polardatatype">PolarDataType</a>; settings?: <a href="#polarsensorsetting">PolarSensorSetting</a>; }</code> |
 
---------------------
-
+---
 
 ### stopOfflineRecording(...)
 
@@ -520,8 +490,7 @@ stopOfflineRecording(options: { identifier: string; feature: PolarDataType; }) =
 | ------------- | ----------------------------------------------------------------------------------------- |
 | **`options`** | <code>{ identifier: string; feature: <a href="#polardatatype">PolarDataType</a>; }</code> |
 
---------------------
-
+---
 
 ### getOfflineRecordingStatus(...)
 
@@ -535,8 +504,7 @@ getOfflineRecordingStatus(options: { identifier: string; }) => Promise<{ feature
 
 **Returns:** <code>Promise&lt;{ features: PolarDataType[]; }&gt;</code>
 
---------------------
-
+---
 
 ### listOfflineRecordings(...)
 
@@ -550,8 +518,7 @@ listOfflineRecordings(options: { identifier: string; }) => Promise<{ entries: Po
 
 **Returns:** <code>Promise&lt;{ entries: PolarOfflineRecordingEntry[]; }&gt;</code>
 
---------------------
-
+---
 
 ### getOfflineRecord(...)
 
@@ -565,8 +532,7 @@ getOfflineRecord(options: { identifier: string; entry: PolarOfflineRecordingEntr
 
 **Returns:** <code>Promise&lt;<a href="#polarofflinerecordingdata">PolarOfflineRecordingData</a>&gt;</code>
 
---------------------
-
+---
 
 ### removeOfflineRecord(...)
 
@@ -578,8 +544,7 @@ removeOfflineRecord(options: { identifier: string; entry: PolarOfflineRecordingE
 | ------------- | ----------------------------------------------------------------------------------------------------------------- |
 | **`options`** | <code>{ identifier: string; entry: <a href="#polarofflinerecordingentry">PolarOfflineRecordingEntry</a>; }</code> |
 
---------------------
-
+---
 
 ### getDiskSpace(...)
 
@@ -593,8 +558,7 @@ getDiskSpace(options: { identifier: string; }) => Promise<{ freeSpace: number; t
 
 **Returns:** <code>Promise&lt;{ freeSpace: number; totalSpace: number; }&gt;</code>
 
---------------------
-
+---
 
 ### getLocalTime(...)
 
@@ -608,8 +572,7 @@ getLocalTime(options: { identifier: string; }) => Promise<{ time: string; }>
 
 **Returns:** <code>Promise&lt;{ time: string; }&gt;</code>
 
---------------------
-
+---
 
 ### setLocalTime(...)
 
@@ -621,8 +584,7 @@ setLocalTime(options: { identifier: string; time: Date; }) => Promise<void>
 | ------------- | -------------------------------------------------------------------- |
 | **`options`** | <code>{ identifier: string; time: <a href="#date">Date</a>; }</code> |
 
---------------------
-
+---
 
 ### doFirstTimeUse(...)
 
@@ -634,8 +596,7 @@ doFirstTimeUse(options: { identifier: string; config: PolarFirstTimeUseConfig; }
 | ------------- | ------------------------------------------------------------------------------------------------------------ |
 | **`options`** | <code>{ identifier: string; config: <a href="#polarfirsttimeuseconfig">PolarFirstTimeUseConfig</a>; }</code> |
 
---------------------
-
+---
 
 ### getConnectionStatus(...)
 
@@ -649,8 +610,7 @@ getConnectionStatus(options: { identifier: string; }) => Promise<{ connected: bo
 
 **Returns:** <code>Promise&lt;{ connected: boolean; gattConnected: boolean; deviceName: string; services: string[]; browserPaired: boolean; details: string; }&gt;</code>
 
---------------------
-
+---
 
 ### isFtuDone(...)
 
@@ -664,8 +624,7 @@ isFtuDone(options: { identifier: string; }) => Promise<{ done: boolean; message?
 
 **Returns:** <code>Promise&lt;{ done: boolean; message?: string; }&gt;</code>
 
---------------------
-
+---
 
 ### deleteStoredDeviceData(...)
 
@@ -677,8 +636,7 @@ deleteStoredDeviceData(options: { identifier: string; dataType: number; until: s
 | ------------- | --------------------------------------------------------------------- |
 | **`options`** | <code>{ identifier: string; dataType: number; until: string; }</code> |
 
---------------------
-
+---
 
 ### deleteDeviceDateFolders(...)
 
@@ -690,8 +648,7 @@ deleteDeviceDateFolders(options: { identifier: string; fromDate: string; toDate:
 | ------------- | ---------------------------------------------------------------------- |
 | **`options`** | <code>{ identifier: string; fromDate: string; toDate: string; }</code> |
 
---------------------
-
+---
 
 ### getSteps(...)
 
@@ -705,8 +662,7 @@ getSteps(options: { identifier: string; fromDate: string; toDate: string; }) => 
 
 **Returns:** <code>Promise&lt;{ data: PolarStepsData[]; }&gt;</code>
 
---------------------
-
+---
 
 ### getDistance(...)
 
@@ -720,8 +676,7 @@ getDistance(options: { identifier: string; fromDate: string; toDate: string; }) 
 
 **Returns:** <code>Promise&lt;{ data: PolarDistanceData[]; }&gt;</code>
 
---------------------
-
+---
 
 ### getActiveTime(...)
 
@@ -735,8 +690,7 @@ getActiveTime(options: { identifier: string; fromDate: string; toDate: string; }
 
 **Returns:** <code>Promise&lt;{ data: PolarActiveTimeData[]; }&gt;</code>
 
---------------------
-
+---
 
 ### getActivitySampleData(...)
 
@@ -750,8 +704,7 @@ getActivitySampleData(options: { identifier: string; fromDate: string; toDate: s
 
 **Returns:** <code>Promise&lt;{ data: PolarActivitySampleData[]; }&gt;</code>
 
---------------------
-
+---
 
 ### sendInitializationAndStartSyncNotifications(...)
 
@@ -765,8 +718,7 @@ sendInitializationAndStartSyncNotifications(options: { identifier: string; }) =>
 
 **Returns:** <code>Promise&lt;{ success: boolean; }&gt;</code>
 
---------------------
-
+---
 
 ### sendTerminateAndStopSyncNotifications(...)
 
@@ -778,8 +730,7 @@ sendTerminateAndStopSyncNotifications(options: { identifier: string; }) => Promi
 | ------------- | ------------------------------------ |
 | **`options`** | <code>{ identifier: string; }</code> |
 
---------------------
-
+---
 
 ### addListener('hrData', ...)
 
@@ -794,8 +745,7 @@ addListener(eventName: 'hrData', listenerFunc: (data: any) => void) => Promise<P
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('ecgData', ...)
 
@@ -810,8 +760,7 @@ addListener(eventName: 'ecgData', listenerFunc: (data: any) => void) => Promise<
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('accData', ...)
 
@@ -826,8 +775,7 @@ addListener(eventName: 'accData', listenerFunc: (data: any) => void) => Promise<
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('gyroData', ...)
 
@@ -842,8 +790,7 @@ addListener(eventName: 'gyroData', listenerFunc: (data: any) => void) => Promise
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('magnetometerData', ...)
 
@@ -858,8 +805,7 @@ addListener(eventName: 'magnetometerData', listenerFunc: (data: any) => void) =>
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('ppgData', ...)
 
@@ -874,8 +820,7 @@ addListener(eventName: 'ppgData', listenerFunc: (data: any) => void) => Promise<
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('ppiData', ...)
 
@@ -890,8 +835,7 @@ addListener(eventName: 'ppiData', listenerFunc: (data: any) => void) => Promise<
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('temperatureData', ...)
 
@@ -906,8 +850,7 @@ addListener(eventName: 'temperatureData', listenerFunc: (data: any) => void) => 
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('pressureData', ...)
 
@@ -922,8 +865,7 @@ addListener(eventName: 'pressureData', listenerFunc: (data: any) => void) => Pro
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('deviceConnected', ...)
 
@@ -938,8 +880,7 @@ addListener(eventName: 'deviceConnected', listenerFunc: (data: PolarDeviceInfo) 
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('deviceConnecting', ...)
 
@@ -954,8 +895,7 @@ addListener(eventName: 'deviceConnecting', listenerFunc: (data: PolarDeviceInfo)
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('deviceDisconnected', ...)
 
@@ -970,8 +910,7 @@ addListener(eventName: 'deviceDisconnected', listenerFunc: (data: PolarDeviceInf
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('deviceFound', ...)
 
@@ -986,8 +925,7 @@ addListener(eventName: 'deviceFound', listenerFunc: (data: PolarDeviceInfo) => v
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('blePowerStateChanged', ...)
 
@@ -1002,8 +940,7 @@ addListener(eventName: 'blePowerStateChanged', listenerFunc: (data: { enabled: b
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('batteryLevelReceived', ...)
 
@@ -1018,8 +955,7 @@ addListener(eventName: 'batteryLevelReceived', listenerFunc: (data: { identifier
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('disInformationReceived', ...)
 
@@ -1034,8 +970,7 @@ addListener(eventName: 'disInformationReceived', listenerFunc: (data: { identifi
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### addListener('sdkFeatureReady', ...)
 
@@ -1050,8 +985,7 @@ addListener(eventName: 'sdkFeatureReady', listenerFunc: (data: { identifier: str
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
---------------------
-
+---
 
 ### removeAllListeners()
 
@@ -1059,18 +993,15 @@ addListener(eventName: 'sdkFeatureReady', listenerFunc: (data: { identifier: str
 removeAllListeners() => Promise<void>
 ```
 
---------------------
-
+---
 
 ### Interfaces
-
 
 #### PolarSensorSetting
 
 | Prop           | Type                                      |
 | -------------- | ----------------------------------------- |
 | **`settings`** | <code>{ [key: string]: number[]; }</code> |
-
 
 #### PolarExerciseEntry
 
@@ -1080,7 +1011,6 @@ removeAllListeners() => Promise<void>
 | **`date`**    | <code>string</code> |
 | **`entryId`** | <code>string</code> |
 
-
 #### PolarExerciseData
 
 | Prop           | Type                  |
@@ -1088,13 +1018,11 @@ removeAllListeners() => Promise<void>
 | **`interval`** | <code>number</code>   |
 | **`samples`**  | <code>number[]</code> |
 
-
 #### LedConfig
 
 | Prop             | Type                 |
 | ---------------- | -------------------- |
 | **`ledEnabled`** | <code>boolean</code> |
-
 
 #### PolarOfflineRecordingEntry
 
@@ -1105,14 +1033,12 @@ removeAllListeners() => Promise<void>
 | **`date`** | <code>string</code> |
 | **`type`** | <code>string</code> |
 
-
 #### PolarOfflineRecordingData
 
 | Prop            | Type                                                              |
 | --------------- | ----------------------------------------------------------------- |
 | **`startTime`** | <code>string</code>                                               |
 | **`settings`**  | <code><a href="#polarsensorsetting">PolarSensorSetting</a></code> |
-
 
 #### Date
 
@@ -1164,7 +1090,6 @@ Enables basic storage and retrieval of dates and times.
 | **toISOString**        | () =&gt; string                                                                                              | Returns a date as a string value in ISO format.                                                                                         |
 | **toJSON**             | (key?: any) =&gt; string                                                                                     | Used by the JSON.stringify method to enable the transformation of an object's data for JavaScript Object Notation (JSON) serialization. |
 
-
 #### PolarFirstTimeUseConfig
 
 | Prop                     | Type                |
@@ -1181,14 +1106,12 @@ Enables basic storage and retrieval of dates and times.
 | **`typicalDay`**         | <code>number</code> |
 | **`sleepGoalMinutes`**   | <code>number</code> |
 
-
 #### PolarStepsData
 
 | Prop        | Type                |
 | ----------- | ------------------- |
 | **`date`**  | <code>string</code> |
 | **`steps`** | <code>number</code> |
-
 
 #### PolarDistanceData
 
@@ -1197,14 +1120,12 @@ Enables basic storage and retrieval of dates and times.
 | **`date`**     | <code>string</code> |
 | **`distance`** | <code>number</code> |
 
-
 #### PolarActiveTimeData
 
 | Prop                    | Type                |
 | ----------------------- | ------------------- |
 | **`date`**              | <code>string</code> |
 | **`activeTimeSeconds`** | <code>number</code> |
-
 
 #### PolarActivitySampleData
 
@@ -1213,13 +1134,11 @@ Enables basic storage and retrieval of dates and times.
 | **`date`**            | <code>string</code> |
 | **`samplesDataList`** | <code>any[]</code>  |
 
-
 #### PluginListenerHandle
 
 | Prop         | Type                                      |
 | ------------ | ----------------------------------------- |
 | **`remove`** | <code>() =&gt; Promise&lt;void&gt;</code> |
-
 
 #### PolarDeviceInfo
 
@@ -1231,9 +1150,7 @@ Enables basic storage and retrieval of dates and times.
 | **`name`**          | <code>string</code>  |
 | **`isConnectable`** | <code>boolean</code> |
 
-
 ### Enums
-
 
 #### PolarDataType
 
@@ -1249,14 +1166,12 @@ Enables basic storage and retrieval of dates and times.
 | **`TEMPERATURE`**  | <code>7</code> |
 | **`PRESSURE`**     | <code>8</code> |
 
-
 #### RecordingInterval
 
 | Members           | Value          |
 | ----------------- | -------------- |
 | **`INTERVAL_1S`** | <code>0</code> |
 | **`INTERVAL_5S`** | <code>1</code> |
-
 
 #### SampleType
 
